@@ -1,8 +1,7 @@
 # $NetBSD: Makefile,v 1.25 2018/08/22 09:45:36 wiz Exp $
 
-DISTNAME=	fftw-3.3.6-pl1
-PKGNAME=	${DISTNAME:C/fftw/fftwf/:S/-pl1/pl1/}
-PKGREVISION=	1
+DISTNAME=	fftw-3.3.8
+PKGNAME=	${DISTNAME:C/fftw/fftwf/}
 CATEGORIES=	math
 MASTER_SITES=	ftp://ftp.fftw.org/pub/fftw/
 MASTER_SITES+=	http://www.fftw.org/
@@ -12,35 +11,43 @@ HOMEPAGE=	http://www.fftw.org/
 COMMENT=	Collection of fast C routines to compute DFTs
 LICENSE=	gnu-gpl-v2
 
-USE_LIBTOOL=		yes
-PKGCONFIG_OVERRIDE+=	fftw.pc.in
-GNU_CONFIGURE=		yes
-CONFIGURE_ARGS+=	--enable-shared
+USE_LANGUAGES=          c
+USE_LIBTOOL=            yes
+USE_TOOLS+=             gmake
+GNU_CONFIGURE=          yes
+CONFIGURE_ARGS+=        --enable-shared
 CONFIGURE_ARGS+=	--enable-float
 
+.include "options.mk"
+
+PKGCONFIG_OVERRIDE+=    fftw.pc.in
+INFO_FILES=             yes
+
 DEPENDS+=		fftw>=3.2:../../math/fftw
+
+TEST_TARGET=            check
+
+.include "../../mk/bsd.prefs.mk"
 
 .if (${MACHINE_ARCH} == "i386")
 #CONFIGURE_ARGS+=	--enable-sse
 CONFIGURE_ARGS+=	--with-our-malloc16
 .endif
-USE_LANGUAGES=		c fortran77
-USE_TOOLS+=		gmake
-# For the "test" target:
-USE_TOOLS+=		perl
 
-TEST_TARGET=		check
+.if defined(PKGSRC_RUN_TEST) && !empty(PKGSRC_RUN_TEST:M[Yy][Ee][Ss])
+USE_TOOLS+=             perl
+.endif
 
 INSTALLATION_DIRS=	${PKGMANDIR}/man1
 INSTALL_TARGET=		install-libLTLIBRARIES install-pkgconfigDATA
 
+PLIST_VARS+=            pthreads
 
-PLIST_VARS+=		pthreads
-PTHREAD_OPTS=		native
+PTHREAD_OPTS=           native
 .include "../../mk/pthread.buildlink3.mk"
 .if !empty(PTHREAD_TYPE:Mnative)
-CONFIGURE_ARGS+=	--enable-threads
-PLIST.pthreads=		yes
+CONFIGURE_ARGS+=        --enable-threads
+PLIST.pthreads=         yes
 .endif
 
 post-install:
