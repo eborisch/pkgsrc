@@ -112,6 +112,7 @@ curl			Enable curl support.
 curses			Enable curses support.
 cvs			Enable CVS support.
 cvsgraph		Enable cvsgraph support.
+cxx11			Enable c++11 support.
 cython			Enable Cython support.
 daap                    Enable Digital Audio Access Protocol support.
 daemontools-moresignals	Add options to send SIG{QUIT,USR1,USR2} to daemons.
@@ -159,6 +160,7 @@ dvdcss			Enable CSS support for DVDs.
 dvdnav			Enable libdvdnav support to navigate DVDs.
 dvdread			Enable reproduction of DVDs.
 dvi			Enable device independent file format (mostly TeX) support.
+eab			EAB's personal tweaks.
 eaccelerator-disassembler	Include disassembler.
 eaccelerator-doc-comment-inclusion	Retain doc-comments in internal php structures.
 eai			Enable EAI (Email Address Internationalization) support.
@@ -627,6 +629,7 @@ postfix-stress		Enable Postfix stress-adaptive behaviour.
 postgrey-targrey	Enable the Postgrey taRgrey tarpitting patch.
 ppx	Enable PPX support.
 prime			Use Prime for Kana-to-Kanji conversion.
+private			Enable private DICOM dictionaries.
 proftpd-readme		Enable mod_readme.
 psiconv			Enable psiconv support (for PSION 5 file formats).
 psl			Enable support for Public Suffix List.
@@ -803,6 +806,7 @@ unrealircd-showlistmodes	Show the modes a channel has set in the /list output.
 unrealircd-shunnotices	Notify a user when they are no longer shunned.
 unrealircd-topicisnuhost	/topic command to show the nick!user@host of the person who set the topic.
 unrealircd-ziplinks	Compress data before transmitting it between servers.
+unsupported		Build a non-officially-supported configuration.
 upnp			Enable support for UPnP.
 upower                  Enable support for upower.
 utf8			Enable UTF-8 (iconv) character encoding support.
