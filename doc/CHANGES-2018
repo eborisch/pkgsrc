@@ -1,4 +1,4 @@
-$NetBSD: CHANGES-2018,v 1.4479 2018/10/24 10:56:10 adam Exp $
+$NetBSD: CHANGES-2018,v 1.4486 2018/10/24 18:31:45 leot Exp $
 
 Changes to the packages collection and infrastructure in 2018:
 
@@ -6241,3 +6241,10 @@ Changes to the packages collection and infrastructure in 2018:
 	Updated devel/py-autopep8 to 1.4.2 [adam 2018-10-24]
 	Updated multimedia/mkvtoolnix to 28.1.0 [adam 2018-10-24]
 	Updated archivers/unrar to 5.6.8 [adam 2018-10-24]
+	Updated mail/qmail to 1.03nb38 [schmonz 2018-10-24]
+	Updated mail/qmail-run to 20181024 [schmonz 2018-10-24]
+	Updated mail/mess822 to 0.58nb8 [schmonz 2018-10-24]
+	Updated sysutils/checkpassword-pam to 0.99nb2 [schmonz 2018-10-24]
+	Updated sysutils/checkpassword to 0.90nb2 [schmonz 2018-10-24]
+	Updated devel/ncursesw to 6.1nb2 [minskim 2018-10-24]
+	Updated www/webkit-gtk to 2.22.2 [leot 2018-10-24]
