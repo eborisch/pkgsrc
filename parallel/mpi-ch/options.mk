@@ -1,7 +1,7 @@
 # $NetBSD: options.mk,v 1.5 2017/06/20 17:24:06 adam Exp $
 
 PKG_OPTIONS_VAR=	PKG_OPTIONS.mpich
-PKG_SUPPORTED_OPTIONS=	debug f90
+PKG_SUPPORTED_OPTIONS=	debug f90 eab
 
 .include "../../mk/bsd.options.mk"
 
@@ -18,4 +18,15 @@ CONFIGURE_ARGS+=	--enable-fortran=yes
 PLIST.f90=		yes
 .else
 CONFIGURE_ARGS+=	--enable-fortran=no
+.endif
+
+.if !empty(PKG_OPTIONS:Meab)
+CONFIGURE_ARGS+=	--enable-cache
+CONFIGURE_ARGS+=	--enable-base-cache
+CONFIGURE_ARGS+=	--enable-shared
+CONFIGURE_ARGS+=	--disable-dependency-tracking
+CONFIGURE_ARGS+=	--enable-versioning
+CONFIGURE_ARGS+=	--disable-silent-rules
+CONFIGURE_ARGS+=	--enable-fast=all
+CONFIGURE_ARGS+=	--enable-nemesis-shm-collectives
 .endif
