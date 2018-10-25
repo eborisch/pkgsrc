@@ -592,6 +592,7 @@ openexr			Use OpenEXR as imaging library.
 opengl			Use OpenGL as display library.
 opengrok-build		Enable building of OpenGrok from source.
 openldap		Enable OpenLDAP support.
+openmp			Enable OpenMP support.
 openmpi-vampirtrace	Build VampirTrace as part of OpenMPI.
 openssl			Enable OpenSSL support.
 opus			Enable opus support.

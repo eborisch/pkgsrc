@@ -1,7 +1,7 @@
 # $NetBSD: options.mk,v 1.3 2018/05/30 06:45:58 adam Exp $
 
 PKG_OPTIONS_VAR=	PKG_OPTIONS.fftw
-PKG_SUPPORTED_OPTIONS=	fftw-fortran
+PKG_SUPPORTED_OPTIONS=	fftw-fortran openmp
 # Enable fortran support by default on platforms supported by lang/g95.
 .if (!empty(MACHINE_ARCH:Mi386) || !empty(MACHINE_ARCH:Mx86_64) || \
 	!empty(MACHINE_ARCH:Mia64) || !empty(MACHINE_ARCH:Mpowerpc*) || \
@@ -17,4 +17,11 @@ PKG_SUPPORTED_OPTIONS=	fftw-fortran
 USE_LANGUAGES+=		fortran77
 .else
 CONFIGURE_ARGS+=	--disable-fortran
+.endif
+
+PLIST_VARS+=		openmp
+
+.if !empty(PKG_OPTIONS:Mopenmp)
+CONFIGURE_ARGS+=	--enable-openmp
+PLIST.openmp=		yes
 .endif
