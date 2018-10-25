@@ -11,6 +11,7 @@ lib/cmake/fftw3/FFTW3Config.cmake
 lib/cmake/fftw3/FFTW3ConfigVersion.cmake
 lib/libfftw3.la
 ${PLIST.pthreads}lib/libfftw3_threads.la
+${PLIST.openmp}lib/libfftw3_omp.la
 lib/pkgconfig/fftw3.pc
 man/man1/fftw-wisdom-to-conf.1
 man/man1/fftw-wisdom.1
