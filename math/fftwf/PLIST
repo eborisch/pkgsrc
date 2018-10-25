@@ -2,5 +2,6 @@
 bin/fftwf-wisdom
 lib/libfftw3f.la
 ${PLIST.pthreads}lib/libfftw3f_threads.la
+${PLIST.openmp}lib/libfftw3f_omp.la
 lib/pkgconfig/fftw3f.pc
 man/man1/fftwf-wisdom.1
