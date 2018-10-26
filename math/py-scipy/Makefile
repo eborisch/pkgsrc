@@ -19,7 +19,7 @@ MAKE_ENV+=	ATLAS=None
 .if defined(PKGSRC_FORTRAN) && !empty(PKGSRC_FORTRAN:Mg95)
 PYSETUPBUILDARGS+=	--fcompiler=g95
 .elif defined(PKGSRC_FORTRAN) && !empty(PKGSRC_FORTRAN:Mgfortran)
-PYSETUPBUILDARGS+=	--fcompiler=gnu95
+PYSETUPBUILDARGS+=	--fcompiler=gfortran
 LDFLAGS.Darwin+=	-undefined dynamic_lookup
 .else
 BROKEN=		Requires fortran 95
