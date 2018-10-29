@@ -11,6 +11,8 @@ COMMENT=	Open source MPI, MPI-2, and MPI-3 implementation from Univ. of Chicago
 CONFLICTS+=	openmpi-[0-9]*
 DEPENDS+=	bash-[0-9]*:../../shells/bash
 
+FORTIFY_SUPPORTED=	no
+
 #MPI_SUBPREFIX=		mpich
 #MPI_PREFIX=		${LOCALBASE}/${MPI_SUBPREFIX}
 MPI_PREFIX=		${LOCALBASE}
@@ -30,9 +32,7 @@ CONFIGURE_ARGS+=	--with-hwloc-prefix=${BUILDLINK_PREFIX.hwloc}
 CONFIGURE_ARGS+=	--with-openpa-prefix=${BUILDLINK_PREFIX.openpa}
 CONFIGURE_ARGS+=	--with-pm=hydra:gforker
 CONFIGURE_ARGS+=	--with-thread-package=posix
-# Make MPI compiler wrapper usable outside pkgsrc:
-CONFIGURE_ENV+=		WRAPPER_LDFLAGS="-L${MPI_PREFIX}/lib ${COMPILER_RPATH_FLAG}${MPI_PREFIX}/lib"
-CONFIGURE_ENV+=		MPICH_LDFLAGS="-L${MPI_PREFIX}/lib ${COMPILER_RPATH_FLAG}${MPI_PREFIX}/lib"
+CONFIGURE_ARGS+=	--enable-wrapper-rpath
 
 LDFLAGS+=		-lm
 
@@ -47,6 +47,12 @@ BUILDLINK_TRANSFORM+=	rm:-lrt
 .endif
 
 .include "options.mk"
+
+MPICHLIB_CFLAGS:=	${CPU_FLAGS} -O2
+CONFIGURE_ENV+=		MPICHLIB_CFLAGS="${MPICHLIB_CFLAGS}"
+CONFIGURE_ENV+=		MPICHLIB_CXXFLAGS="${MPICHLIB_CFLAGS}"
+CFLAGS!=		echo ${CFLAGS} | sed -e 's^${CPU_FLAGS}^^g'
+CXXFLAGS!=		echo ${CXXFLAGS} | sed -e 's^${CPU_FLAGS}^^g'
 
 TEST_TARGET=	check
 
