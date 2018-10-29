@@ -11,6 +11,8 @@ COMMENT=	Open source MPI, MPI-2, and MPI-3 implementation from Univ. of Chicago
 CONFLICTS+=	openmpi-[0-9]*
 DEPENDS+=	bash-[0-9]*:../../shells/bash
 
+FORTIFY_SUPPORTED=	no
+
 #MPI_SUBPREFIX=		mpich
 #MPI_PREFIX=		${LOCALBASE}/${MPI_SUBPREFIX}
 MPI_PREFIX=		${LOCALBASE}
@@ -45,6 +47,12 @@ BUILDLINK_TRANSFORM+=	rm:-lrt
 .endif
 
 .include "options.mk"
+
+MPICHLIB_CFLAGS:=	${CPU_FLAGS} -O2
+CONFIGURE_ENV+=		MPICHLIB_CFLAGS="${MPICHLIB_CFLAGS}"
+CONFIGURE_ENV+=		MPICHLIB_CXXFLAGS="${MPICHLIB_CFLAGS}"
+CFLAGS!=		echo ${CFLAGS} | sed -e 's^${CPU_FLAGS}^^g'
+CXXFLAGS!=		echo ${CXXFLAGS} | sed -e 's^${CPU_FLAGS}^^g'
 
 TEST_TARGET=	check
 
