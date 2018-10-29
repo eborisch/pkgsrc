@@ -1,6 +1,6 @@
 #! /bin/sh
 
-# $NetBSD: bootstrap,v 1.251 2018/10/17 11:12:46 jperkin Exp $
+# $NetBSD: bootstrap,v 1.253 2018/10/28 18:41:41 sevan Exp $
 #
 # Copyright (c) 2001-2011 Alistair Crooks <agc@NetBSD.org>
 # All rights reserved.
@@ -733,7 +733,7 @@ Minix)
 	need_sed=no
 	set_opsys=no
 	machine_arch=`uname -p`
-	LDFLAGS="-lcompat_minix -lminlib"
+	check_compiler=yes
 	;;	
 MirBSD)
 	root_group=wheel
