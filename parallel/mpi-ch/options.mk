@@ -28,5 +28,5 @@ CONFIGURE_ARGS+=	--disable-dependency-tracking
 CONFIGURE_ARGS+=	--enable-versioning
 CONFIGURE_ARGS+=	--disable-silent-rules
 CONFIGURE_ARGS+=	--enable-fast=all
-CONFIGURE_ARGS+=	--enable-nemesis-shm-collectives
+#CONFIGURE_ARGS+=	--enable-nemesis-shm-collectives
 .endif
