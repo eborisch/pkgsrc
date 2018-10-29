@@ -27,6 +27,7 @@ PLIST_VARS+=	requires
 DEPENDS+=	${PYPKGPREFIX}-backports.ssl_match_hostname-[0-9]*:../../security/py-backports.ssl_match_hostname
 DEPENDS+=	${PYPKGPREFIX}-certifi-[0-9]*:../../security/py-certifi
 DEPENDS+=	${PYPKGPREFIX}-singledispatch>0:../../devel/py-singledispatch
+DEPENDS+=	${PYPKGPREFIX}-futures>0:../../devel/py-futures
 .endif
 .if "${PYPKGPREFIX}" == "py27" || "${PYPKGPREFIX}" == "py34"
 DEPENDS+=	${PYPKGPREFIX}-backports_abc>=0.4:../../devel/py-backports_abc

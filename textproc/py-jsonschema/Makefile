@@ -11,6 +11,7 @@ COMMENT=	Implementation of JSON Schema for Python
 LICENSE=	modified-bsd
 
 DEPENDS+=	${PYPKGPREFIX}-vcversioner-[0-9]*:../../devel/py-vcversioner
+DEPENDS+=	${PYPKGPREFIX}-functools32>0:../../devel/py-functools32
 
 post-install:
 	${MV} ${DESTDIR}${PREFIX}/bin/jsonschema ${DESTDIR}${PREFIX}/bin/jsonschema${PYVERSSUFFIX} || ${TRUE}
