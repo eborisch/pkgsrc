@@ -48,12 +48,6 @@ BUILDLINK_TRANSFORM+=	rm:-lrt
 
 .include "options.mk"
 
-MPICHLIB_CFLAGS:=	${CPU_FLAGS} -O2
-CONFIGURE_ENV+=		MPICHLIB_CFLAGS="${MPICHLIB_CFLAGS}"
-CONFIGURE_ENV+=		MPICHLIB_CXXFLAGS="${MPICHLIB_CFLAGS}"
-CFLAGS!=		echo ${CFLAGS} | sed -e 's^${CPU_FLAGS}^^g'
-CXXFLAGS!=		echo ${CXXFLAGS} | sed -e 's^${CPU_FLAGS}^^g'
-
 TEST_TARGET=	check
 
 .include "../../parallel/hwloc/buildlink3.mk"
