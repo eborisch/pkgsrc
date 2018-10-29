@@ -26,5 +26,6 @@ CMAKE_ARGS+=	-DBUILD_SHARED_LIBS=ON
 CMAKE_ARGS+=	-DDCMTK_WITH_SNDFILE=OFF
 CMAKE_ARGS+=	-DDCMTK_WITH_WRAP=OFF
 
+.include "../../textproc/icu/buildlink3.mk"
 .include "../../devel/zlib/buildlink3.mk"
 .include "../../mk/bsd.pkg.mk"
