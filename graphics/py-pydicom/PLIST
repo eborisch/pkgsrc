@@ -420,3 +420,5 @@ ${PYSITELIB}/pydicom/valuerep.pyo
 ${PYSITELIB}/pydicom/values.py
 ${PYSITELIB}/pydicom/values.pyc
 ${PYSITELIB}/pydicom/values.pyo
+${DOCDIR}/LICENSE
+${DOCDIR}/README.md
