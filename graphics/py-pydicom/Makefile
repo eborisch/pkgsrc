@@ -1,11 +1,12 @@
 # $NetBSD$
 
-GITHUB_PROJECT=	pydicom
-DISTNAME=	v1.2.0
-PKGNAME=	${GITHUB_PROJECT}-${DISTNAME}
-CATEGORIES=	graphics
+DISTNAME=	pydicom-1.2.0
+PKGNAME=	${PYPKGPREFIX}-${DISTNAME}
+CATEGORIES=	graphics python
 MASTER_SITES=	${MASTER_SITE_GITHUB:=pydicom/}
-DIST_SUBDIR=	${GITHUB_PROJECT}
+GITHUB_PROJECT=	pydicom
+GITHUB_TAG=	v${PKGVERSION_NOREV}
+#DIST_SUBDIR=	${GITHUB_PROJECT}
 
 MAINTAINER=     eborisch@gmail.com
 HOMEPAGE=       https://github.com/pydicom/pydicom/
@@ -14,6 +15,14 @@ LICENSE=        modified-bsd AND mit
 
 WRKSRC=		${WRKDIR}/pydicom-1.2.0
 USE_LANGUAGES=	# none
+
+DOCDIR=		share/doc/${PKGBASE}
+PLIST_SUBST=	DOCDIR=${DOCDIR:Q}
+INSTALLATION_DIRS+= ${DOCDIR}
+
+post-install:
+	${INSTALL_DATA} ${WRKSRC}/LICENSE ${DESTDIR}${PREFIX}/${DOCDIR}
+	${INSTALL_DATA} ${WRKSRC}/README.md ${DESTDIR}${PREFIX}/${DOCDIR}
 
 .include "../../lang/python/egg.mk"
 .include "../../mk/bsd.pkg.mk"
