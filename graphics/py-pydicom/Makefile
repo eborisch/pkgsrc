@@ -12,7 +12,6 @@ HOMEPAGE=	https://github.com/pydicom/pydicom/
 COMMENT=	Pure python package for working with DICOM files
 LICENSE=	modified-bsd AND mit
 
-WRKSRC=	${WRKDIR}/pydicom-1.2.0
 USE_LANGUAGES=	# none
 
 DOCDIR=	share/doc/${PKGBASE}
