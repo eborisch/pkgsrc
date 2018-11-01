@@ -21,6 +21,8 @@ CONFIGURE_ARGS+=	--enable-fortran=no
 .endif
 
 .if !empty(PKG_OPTIONS:Meab)
+FORTIFY_SUPPORTED=	no
+
 CONFIGURE_ARGS+=	--enable-cache
 CONFIGURE_ARGS+=	--enable-base-cache
 CONFIGURE_ARGS+=	--enable-shared

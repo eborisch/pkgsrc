@@ -11,8 +11,6 @@ COMMENT=	Open source MPI, MPI-2, and MPI-3 implementation from Univ. of Chicago
 CONFLICTS+=	openmpi-[0-9]*
 DEPENDS+=	bash-[0-9]*:../../shells/bash
 
-FORTIFY_SUPPORTED=	no
-
 #MPI_SUBPREFIX=		mpich
 #MPI_PREFIX=		${LOCALBASE}/${MPI_SUBPREFIX}
 MPI_PREFIX=		${LOCALBASE}
