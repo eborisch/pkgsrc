@@ -38,6 +38,12 @@ PKG_SYSCONFSUBDIR=	mpich
 
 BUILDLINK_PASSTHRU_RPATHDIRS+=	${MPI_PREFIX}/lib
 
+SUBST_CLASSES+=		fix-paths
+SUBST_STAGE.fix-paths=	post-build
+SUBST_FILES.fix-paths=	${WRKSRC}/src/env/mpicc ${WRKSRC}/src/env/mpicxx
+SUBST_SED.fix-paths=	-e 's,CC="cc",CC="${CCPATH}",'
+SUBST_SED.fix-paths+=	-e 's,CXX="c++",CXX="${CXXPATH}",'
+
 # FreeBSD 6 hack:
 .include "../../mk/bsd.prefs.mk"
 .if ${OPSYS} == "FreeBSD" || ${OPSYS} == "DragonFly"
