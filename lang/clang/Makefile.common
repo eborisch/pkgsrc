@@ -133,6 +133,9 @@ CMAKE_ARGS+=		-DCLANG_INCLUDE_TESTS=OFF
 post-extract:
 	${MKDIR} ${WRKDIR}/build
 
+post-patch:
+	cd ${WRKSRC} && ${SED} --in-place='' -e 's,@@PREFIX@@,${PREFIX},' lib/Driver/ToolChains/CommonArgs.cpp lib/Driver/ToolChains/Clang.cpp
+
 .include "../../textproc/libxml2/buildlink3.mk"
 .include "../../devel/zlib/buildlink3.mk"
 .include "../../lang/python/application.mk"
