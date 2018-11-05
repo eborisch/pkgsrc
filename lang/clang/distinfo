@@ -7,4 +7,5 @@ Size (cfe-6.0.1.src.tar.xz) = 11905772 bytes
 SHA1 (patch-lib_Basic_Targets_OSTargets.h) = a8a710720e67c778cf5d4e30e3bb41d9aaf7c9d4
 SHA1 (patch-lib_Driver_ToolChains_Solaris.cpp) = 7cf1d43b50e7a0bf0842f2265b0449b0fea44007
 SHA1 (patch-lib_Driver_ToolChains_Solaris.h) = 13849df72a4b719bbb6109ab1d1abf2e7b97014f
+SHA1 (patch-lib_Driver_ToolChains_openmp) = a6c724d96d1bafd5510200d612e49d2c7d2a6ff4
 SHA1 (patch-lib_Frontend_InitHeaderSearch.cpp) = 924cb81bd8e2eb07c3577e25c1b1d4f405e9360f
