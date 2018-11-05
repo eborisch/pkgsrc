@@ -1,0 +1,11 @@
+--- config/configure.orig	2018-11-05 12:40:26.294738159 -0600
++++ config/configure	2018-11-05 12:41:11.913768835 -0600
+@@ -15953,7 +15953,7 @@
+   fi
+ 
+ 
+-   if test "$HAVE_CXX11 == 1"; then
++   if test "$HAVE_CXX11 = 1"; then
+      ac_enable_cxx11="yes"
+    fi
+    { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether to enable C++11 support" >&5
