@@ -1,0 +1,6 @@
+$NetBSD: distinfo,v 1.10 2018/08/07 10:44:50 adam Exp $
+
+SHA1 (openmp-6.0.1.src.tar.xz) = 4cd2af91aa734078cfb0e8aac213483e765b81fc
+RMD160 (openmp-6.0.1.src.tar.xz) = ae58847caeea529b3dfbfb42dee8812b3055374b
+SHA512 (openmp-6.0.1.src.tar.xz) = abb956583e5d11d0c6f6d97183c081d658616a74933be884a591eaa3d8c4bb04f08f02016d2c86d7384c7ff1aa44fb949b0d967fc0ff50e3132aaba412e9add8
+Size (openmp-6.0.1.src.tar.xz) = 2048320 bytes
