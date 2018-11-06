@@ -1,4 +1,4 @@
-# $NetBSD: Makefile,v 1.85 2018/08/22 09:46:10 wiz Exp $
+# $NetBSD: Makefile,v 1.86 2018/11/04 11:49:40 bsiegert Exp $
 
 DISTNAME=	mpich-3.2.1
 CATEGORIES=	parallel

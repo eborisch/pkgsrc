@@ -1,4 +1,4 @@
-@comment $NetBSD: PLIST,v 1.23 2017/06/20 17:24:06 adam Exp $
+@comment $NetBSD: PLIST,v 1.24 2018/11/04 11:49:40 bsiegert Exp $
 bin/hydra_nameserver
 bin/hydra_persist
 bin/hydra_pmi_proxy

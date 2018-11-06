@@ -1,4 +1,4 @@
-$NetBSD: distinfo,v 1.26 2017/04/29 18:18:52 adam Exp $
+$NetBSD: distinfo,v 1.27 2018/11/04 11:49:40 bsiegert Exp $
 
 SHA1 (mpich-3.2.1.tar.gz) = 24c53333927d1760db78be2b9ef217f4f3dcf771
 RMD160 (mpich-3.2.1.tar.gz) = b830ba3f5cb5401c03898ad9abf87c60d5cf1e50
