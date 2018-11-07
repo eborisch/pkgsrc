@@ -1,0 +1,5 @@
+@comment $NetBSD$
+lib/hdf5/libh5bshuf.so
+lib/hdf5/libh5bz2.so
+lib/hdf5/libh5lz4.so
+share/doc/HDF5-External-Filter-Plugins/LICENSE.txt
