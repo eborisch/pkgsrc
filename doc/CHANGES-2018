@@ -1,4 +1,4 @@
-$NetBSD: CHANGES-2018,v 1.4596 2018/11/06 19:33:07 adam Exp $
+$NetBSD: CHANGES-2018,v 1.4601 2018/11/07 13:08:57 ryoon Exp $
 
 Changes to the packages collection and infrastructure in 2018:
 
@@ -6423,3 +6423,9 @@ Changes to the packages collection and infrastructure in 2018:
 	Updated www/py-websocket-client to 0.54.0 [adam 2018-11-06]
 	Updated net/tor to 0.3.4.9 [adam 2018-11-06]
 	Updated multimedia/ffmpeg4 to 4.1 [adam 2018-11-06]
+	Updated lang/gcc8 to 8.2.0nb2 [maya 2018-11-07]
+	Updated databases/sqlite3 to 3.25.3 [adam 2018-11-07]
+	Updated security/gnupg2 to 2.2.11 [adam 2018-11-07]
+	Updated net/youtube-dl to 20181107 [leot 2018-11-07]
+	Updated print/qpdf to 8.2.1 [ryoon 2018-11-07]
+	Updated multimedia/libaom to 1.0.0nb1 [ryoon 2018-11-07]
