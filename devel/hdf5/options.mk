@@ -24,8 +24,6 @@ CONFIGURE_ARGS+=	--enable-unsupported
 PLIST_VARS+=		eab
 
 .if !empty(PKG_OPTIONS:Meab)
-USE_LANGUAGES=		c c++
-CONFIGURE_ARGS+=	--enable-cxx
 CONFIGURE_ARGS+=	--with-default-plugin-dir=${PREFIX}/lib/hdf5
 INSTALLATION_DIRS+=     lib/hdf5
 PLIST.eab=		yes
