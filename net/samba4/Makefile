@@ -1,7 +1,7 @@
-# $NetBSD: Makefile,v 1.47 2018/09/29 14:37:30 wiedi Exp $
+# $NetBSD: Makefile,v 1.49 2018/11/12 14:40:22 jperkin Exp $
 
 DISTNAME=	samba-${VERSION}
-PKGREVISION=	9
+PKGREVISION=	10
 CATEGORIES=	net
 MASTER_SITES=	http://download.samba.org/pub/samba/stable/
 
@@ -164,6 +164,8 @@ MESSAGE_SRC=		${PKGDIR}/MESSAGE.rcd
 .endif
 
 SMF_INSTANCES=	smbd nmbd
+
+CTF_FILES_SKIP+=	lib/libdcerpc-samr.so.*	# empty
 
 post-extract:
 	${CP} ${FILESDIR}/adduser.sh ${FILESDIR}/deluser.sh ${WRKDIR}
