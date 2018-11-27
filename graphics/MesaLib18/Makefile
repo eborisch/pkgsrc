@@ -1,7 +1,8 @@
-# $NetBSD: Makefile,v 1.3 2018/10/16 15:21:20 jperkin Exp $
+# $NetBSD: Makefile,v 1.5 2018/11/23 08:06:30 ryoon Exp $
 
 DISTNAME=	mesa-18.2.0
 PKGNAME=	${DISTNAME:S/mesa/MesaLib/}
+PKGREVISION=	1
 CATEGORIES=	graphics x11
 MASTER_SITES=	ftp://ftp.freedesktop.org/pub/mesa/
 # MASTER_SITES=	ftp://ftp.freedesktop.org/pub/mesa/${PKGVERSION_NOREV}/
@@ -90,6 +91,7 @@ INSTALLATION_DIRS+=	share/examples/MesaLib
 post-install:
 	${INSTALL_DATA} ${WRKSRC}/src/util/drirc ${DESTDIR}${PREFIX}/share/examples/MesaLib
 
+.include "../../devel/zlib/buildlink3.mk"
 .include "../../x11/libXrandr/buildlink3.mk"
 .include "../../x11/libX11/buildlink3.mk"
 .include "../../x11/libXext/buildlink3.mk"
