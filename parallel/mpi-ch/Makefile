@@ -1,6 +1,6 @@
 # $NetBSD: Makefile,v 1.87 2019/08/11 13:22:34 wiz Exp $
 
-DISTNAME=	mpich-3.2.1
+DISTNAME=	mpich-3.3
 CATEGORIES=	parallel
 MASTER_SITES=	http://www.mpich.org/static/tarballs/${PKGVERSION_NOREV}/
 
@@ -26,7 +26,9 @@ CONFIGURE_ARGS+=	--datadir=${MPI_PREFIX}/share/${PKGBASE}
 CONFIGURE_ARGS+=	--docdir=${MPI_PREFIX}/share/doc/${PKGBASE}
 CONFIGURE_ARGS+=	--htmldir=${MPI_PREFIX}/share/doc/${PKGBASE}/html
 CONFIGURE_ARGS+=	--sysconfdir=${PKG_SYSCONFDIR}
-CONFIGURE_ARGS+=	--with-hwloc-prefix=${BUILDLINK_PREFIX.hwloc}
+# Needs hwloc 2; use bundled until package is updated
+#CONFIGURE_ARGS+=	--with-hwloc-prefix=${BUILDLINK_PREFIX.hwloc}
+CONFIGURE_ARGS+=	--with-hwloc-prefix=embedded
 CONFIGURE_ARGS+=	--with-openpa-prefix=${BUILDLINK_PREFIX.openpa}
 CONFIGURE_ARGS+=	--with-pm=hydra:gforker
 CONFIGURE_ARGS+=	--with-thread-package=posix
@@ -54,7 +56,8 @@ BUILDLINK_TRANSFORM+=	rm:-lrt
 
 TEST_TARGET=	check
 
-.include "../../parallel/hwloc/buildlink3.mk"
+# See comment above on hwloc2
+#.include "../../parallel/hwloc/buildlink3.mk"
 .include "../../parallel/openpa/buildlink3.mk"
 .include "../../mk/pthread.buildlink3.mk"
 .include "../../mk/bsd.pkg.mk"
