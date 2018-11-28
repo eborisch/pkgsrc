@@ -1,12 +1,12 @@
 $NetBSD: distinfo,v 1.27 2018/11/04 11:49:40 bsiegert Exp $
 
-SHA1 (mpich-3.2.1.tar.gz) = 24c53333927d1760db78be2b9ef217f4f3dcf771
-RMD160 (mpich-3.2.1.tar.gz) = b830ba3f5cb5401c03898ad9abf87c60d5cf1e50
-SHA512 (mpich-3.2.1.tar.gz) = 659a11cf02302f27eb1db77667dd4c7a4f8008b1d73f5f0f0f28ee6b5d9cca2130bac3d010a132136ba15a25a738ec9cbda67255133aeb42f0d82a2ded23d23d
-Size (mpich-3.2.1.tar.gz) = 11908154 bytes
+SHA1 (mpich-3.3.tar.gz) = 580808dc384f0ba1a317a880d7a0a0b6049106ab
+RMD160 (mpich-3.3.tar.gz) = 784a0839217950d861f8695e8ca4138f786cf845
+SHA512 (mpich-3.3.tar.gz) = 1ed6d8d30db4923fd1bd39b6e9622f0db939a45edf8d9f8bdbccfa619fde7fb920c5a0d3f2442f0dd63cf8fda823dbd2983ac5f7c16308bc79e04f61d8e119be
+Size (mpich-3.3.tar.gz) = 27209008 bytes
 SHA1 (patch-Makefile.in) = ee41bc68a9b18269aca8f513b4e93c82e8f27068
-SHA1 (patch-configure) = 00c5706f825dbadeb544d14ee98a1a27e49d0797
+SHA1 (patch-configure) = 46f836a02e01cb8fc000ef69fe14d2d55da5425f
 SHA1 (patch-src_mpi_romio_configure) = a517932dd1af1cc0da889b838fd732a5fb766910
 SHA1 (patch-src_mpid_ch3_channels_nemesis_include_mpidi_ch3_impl.h) = ec7d063fb22fbfb3fc1ee85197afd6f4c4db22bd
-SHA1 (patch-src_mpid_ch3_channels_nemesis_src_ch3__init.c) = ddc3fe79eecabf81b7b092ccaa91c39fa19b29dc
+SHA1 (patch-src_mpid_ch3_channels_nemesis_src_ch3__init.c) = 9226f554c9f397a5599fb0a53921b8749ed65911
 SHA1 (patch-src_pm_hydra_configure) = 814abcb0c6424ae9a1718c016e5b0a7f3ad85e59
