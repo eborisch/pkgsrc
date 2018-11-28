@@ -43,6 +43,13 @@ man/man1/mpiexec.1
 man/man1/mpif77.1
 man/man1/mpifort.1
 man/man3/Constants.3
+man/man3/MPIR_Type_commit.3
+man/man3/MPIR_Type_contiguous.3
+man/man3/MPIR_Type_dup.3
+man/man3/MPIR_Type_get_contents.3
+man/man3/MPIR_Type_indexed.3
+man/man3/MPIR_Type_struct.3
+man/man3/MPIR_Type_vector.3
 man/man3/MPIX_Comm_agree.3
 man/man3/MPIX_Comm_failure_ack.3
 man/man3/MPIX_Comm_failure_get_acked.3
@@ -450,6 +457,13 @@ share/doc/mpich/html/www1/mpiexec.html
 share/doc/mpich/html/www1/mpif77.html
 share/doc/mpich/html/www1/mpifort.html
 share/doc/mpich/html/www3/Constants.html
+share/doc/mpich/html/www3/MPIR_Type_commit.html
+share/doc/mpich/html/www3/MPIR_Type_contiguous.html
+share/doc/mpich/html/www3/MPIR_Type_dup.html
+share/doc/mpich/html/www3/MPIR_Type_get_contents.html
+share/doc/mpich/html/www3/MPIR_Type_indexed.html
+share/doc/mpich/html/www3/MPIR_Type_struct.html
+share/doc/mpich/html/www3/MPIR_Type_vector.html
 share/doc/mpich/html/www3/MPIX_Comm_agree.html
 share/doc/mpich/html/www3/MPIX_Comm_failure_ack.html
 share/doc/mpich/html/www3/MPIX_Comm_failure_get_acked.html
