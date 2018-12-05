@@ -1,4 +1,4 @@
-$NetBSD: distinfo,v 1.1 2018/10/31 20:15:40 leot Exp $
+$NetBSD: distinfo,v 1.2 2018/12/05 10:09:09 bsiegert Exp $
 
 SHA1 (pydicom-1.2.1.tar.gz) = 5601d4b4e510d242cbd56fdb40b7628f3aa2f0bb
 RMD160 (pydicom-1.2.1.tar.gz) = b02f15e8c6d4f09aed8867b4e3ac562b78cc5a83

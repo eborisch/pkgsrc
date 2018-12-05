@@ -1,4 +1,4 @@
-# $NetBSD: Makefile,v 1.1013 2018/11/20 14:09:58 adam Exp $
+# $NetBSD: Makefile,v 1.1016 2018/12/03 19:29:00 markd Exp $
 #
 
 COMMENT=	Text processing utilities (does not include desktop publishing)
@@ -192,6 +192,7 @@ SUBDIR+=	expat
 SUBDIR+=	expatobjc
 SUBDIR+=	ezxml
 SUBDIR+=	flyspell
+SUBDIR+=	fmtlib
 SUBDIR+=	fop
 SUBDIR+=	freepwing
 SUBDIR+=	freexl
@@ -426,6 +427,7 @@ SUBDIR+=	ocaml-text
 SUBDIR+=	ocaml-tyxml
 SUBDIR+=	ocaml-uchar
 SUBDIR+=	ocaml-uutf
+SUBDIR+=	ocaml-xml-light
 SUBDIR+=	odt2tex
 SUBDIR+=	oniguruma
 SUBDIR+=	openjade
@@ -1025,6 +1027,7 @@ SUBDIR+=	xerces-j
 SUBDIR+=	xfce4-dict
 SUBDIR+=	xfpt
 SUBDIR+=	xhtml
+SUBDIR+=	xindy
 SUBDIR+=	xml-coreutils
 SUBDIR+=	xml2
 SUBDIR+=	xml2doc

@@ -53,18 +53,19 @@ func (s *Suite) Test_Tools_ParseToolLine(c *check.C) {
 func (s *Suite) Test_Tools_Define__invalid_tool_name(c *check.C) {
 	t := s.Init(c)
 
+	mkline := t.NewMkLine("dummy.mk", 123, "DUMMY=\tvalue")
 	reg := NewTools("")
 
-	reg.Define("tool_name", "", dummyMkLine)
-	reg.Define("tool:dependency", "", dummyMkLine)
-	reg.Define("tool:build", "", dummyMkLine)
+	reg.Define("tool_name", "", mkline)
+	reg.Define("tool:dependency", "", mkline)
+	reg.Define("tool:build", "", mkline)
 
 	// As of October 2018, the underscore is not used in any tool name.
 	// If there should ever be such a case, just use a different character for testing.
 	t.CheckOutputLines(
-		"ERROR: Invalid tool name \"tool_name\".",
-		"ERROR: Invalid tool name \"tool:dependency\".",
-		"ERROR: Invalid tool name \"tool:build\".")
+		"ERROR: dummy.mk:123: Invalid tool name \"tool_name\".",
+		"ERROR: dummy.mk:123: Invalid tool name \"tool:dependency\".",
+		"ERROR: dummy.mk:123: Invalid tool name \"tool:build\".")
 }
 
 func (s *Suite) Test_Tools_Trace__coverage(c *check.C) {
@@ -108,15 +109,17 @@ func (s *Suite) Test_Tools__USE_TOOLS_predefined_sed(c *check.C) {
 // variable name. When trying to define the tool with its variable name
 // later, the existing definition is amended.
 func (s *Suite) Test_Tools__add_varname_later(c *check.C) {
+	t := s.Init(c)
 
+	mkline := t.NewMkLine("dummy.mk", 123, "DUMMY=\tvalue")
 	tools := NewTools("")
-	tool := tools.Define("tool", "", dummyMkLine)
+	tool := tools.Define("tool", "", mkline)
 
 	c.Check(tool.Name, equals, "tool")
 	c.Check(tool.Varname, equals, "")
 
 	// Updates the existing tool definition.
-	tools.Define("tool", "TOOL", dummyMkLine)
+	tools.Define("tool", "TOOL", mkline)
 
 	c.Check(tool.Name, equals, "tool")
 	c.Check(tool.Varname, equals, "TOOL")
@@ -252,7 +255,7 @@ func (s *Suite) Test_Tools__builtin_mk(c *check.C) {
 	// Tools that are defined by pkgsrc as load-time tools
 	// may be used in any file at load time.
 
-	mklines := t.SetupFileMkLines("builtin.mk",
+	mklines := t.SetupFileMkLines("category/package/builtin.mk",
 		MkRcsID,
 		"",
 		"VAR!=   ${ECHO} 'too early'",
@@ -272,12 +275,12 @@ func (s *Suite) Test_Tools__builtin_mk(c *check.C) {
 	mklines.Check()
 
 	t.CheckOutputLines(
-		"WARN: ~/builtin.mk:3: To use the tool ${ECHO} at load time, bsd.prefs.mk has to be included before.",
-		"WARN: ~/builtin.mk:4: To use the tool ${LOAD} at load time, bsd.prefs.mk has to be included before.",
-		"WARN: ~/builtin.mk:5: The tool ${RUN_CMD} cannot be used at load time.",
-		"WARN: ~/builtin.mk:6: The tool ${NOWHERE} cannot be used at load time.",
-		"WARN: ~/builtin.mk:12: The tool ${RUN_CMD} cannot be used at load time.",
-		"WARN: ~/builtin.mk:13: The tool ${NOWHERE} cannot be used at load time.")
+		"WARN: ~/category/package/builtin.mk:3: To use the tool ${ECHO} at load time, bsd.prefs.mk has to be included before.",
+		"WARN: ~/category/package/builtin.mk:4: To use the tool ${LOAD} at load time, bsd.prefs.mk has to be included before.",
+		"WARN: ~/category/package/builtin.mk:5: The tool ${RUN_CMD} cannot be used at load time.",
+		"WARN: ~/category/package/builtin.mk:6: The tool ${NOWHERE} cannot be used at load time.",
+		"WARN: ~/category/package/builtin.mk:12: The tool ${RUN_CMD} cannot be used at load time.",
+		"WARN: ~/category/package/builtin.mk:13: The tool ${NOWHERE} cannot be used at load time.")
 }
 
 func (s *Suite) Test_Tools__implicit_definition_in_bsd_pkg_mk(c *check.C) {

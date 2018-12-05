@@ -1,4 +1,4 @@
-# $NetBSD: Makefile,v 1.1 2018/11/28 18:48:58 nia Exp $
+# $NetBSD: Makefile,v 1.3 2018/11/28 19:28:37 nia Exp $
 
 DISTNAME=	kitty-0.12.3
 CATEGORIES=	x11
@@ -61,6 +61,7 @@ do-install:
 .include "../../x11/libXrandr/buildlink3.mk"
 .include "../../x11/libxkbcommon/buildlink3.mk"
 .include "../../lang/python/application.mk"
+.include "../../lang/python/extension.mk"
 .include "../../mk/pthread.buildlink3.mk"
 .include "../../mk/dlopen.buildlink3.mk"
 BUILDLINK_TRANSFORM+=	opt:-ldl:${BUILDLINK_LDADD.dl:Q}

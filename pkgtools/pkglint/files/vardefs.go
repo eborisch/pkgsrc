@@ -23,13 +23,13 @@ func (src *Pkgsrc) InitVartypes() {
 		m := mustMatch(varname, `^([A-Z_.][A-Z0-9_]*|@)(|\*|\.\*)$`)
 		varbase, varparam := m[1], m[2]
 
-		vartype := &Vartype{kindOfList, checker, parseACLEntries(varname, aclEntries), false}
+		vartype := Vartype{kindOfList, checker, parseACLEntries(varname, aclEntries), false}
 
 		if varparam == "" || varparam == "*" {
-			src.vartypes[varbase] = vartype
+			src.vartypes[varbase] = &vartype
 		}
 		if varparam == "*" || varparam == ".*" {
-			src.vartypes[varbase+".*"] = vartype
+			src.vartypes[varbase+".*"] = &vartype
 		}
 	}
 
@@ -116,8 +116,8 @@ func (src *Pkgsrc) InitVartypes() {
 	//
 	// If the file cannot be found, the allowed values are taken from
 	// defval. This is mostly useful when testing pkglint.
-	enumFrom := func(fileName string, defval string, varcanons ...string) *BasicType {
-		mklines := LoadMk(src.File(fileName), NotEmpty)
+	enumFrom := func(filename string, defval string, varcanons ...string) *BasicType {
+		mklines := LoadMk(src.File(filename), NotEmpty)
 		values := make(map[string]bool)
 
 		if mklines != nil {
@@ -141,7 +141,7 @@ func (src *Pkgsrc) InitVartypes() {
 		if len(values) > 0 {
 			joined := keysJoined(values)
 			if trace.Tracing {
-				trace.Stepf("Enum from %s in: %s", strings.Join(varcanons, " "), fileName, joined)
+				trace.Stepf("Enum from %s in %s with values: %s", strings.Join(varcanons, " "), filename, joined)
 			}
 			return enum(joined)
 		}
@@ -487,6 +487,7 @@ func (src *Pkgsrc) InitVartypes() {
 	// some other variables, sorted alphabetically
 
 	acl(".CURDIR", lkNone, BtPathname, "buildlink3.mk:; *: use, use-loadtime")
+	acl(".IMPSRC", lkShell, BtPathname, "buildlink3.mk:; *: use, use-loadtime")
 	acl(".TARGET", lkNone, BtPathname, "buildlink3.mk:; *: use, use-loadtime")
 	acl("@", lkNone, BtPathname, "buildlink3.mk:; *: use, use-loadtime")
 	acl("ALL_ENV", lkShell, BtShellWord, "")

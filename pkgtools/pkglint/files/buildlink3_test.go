@@ -8,7 +8,7 @@ func (s *Suite) Test_ChecklinesBuildlink3Mk__unfinished_url2pkg(c *check.C) {
 	t.SetupVartypes()
 	t.CreateFileLines("x11/Xbae/Makefile")
 	t.CreateFileLines("mk/motif.buildlink3.mk")
-	mklines := t.SetupFileMkLines("buildlink3.mk",
+	mklines := t.SetupFileMkLines("category/package/buildlink3.mk",
 		MkRcsID,
 		"# XXX This file was created automatically using createbuildlink-@PKGVERSION@",
 		"",
@@ -30,7 +30,7 @@ func (s *Suite) Test_ChecklinesBuildlink3Mk__unfinished_url2pkg(c *check.C) {
 	ChecklinesBuildlink3Mk(mklines)
 
 	t.CheckOutputLines(
-		"ERROR: ~/buildlink3.mk:2: This comment indicates unfinished work (url2pkg).")
+		"ERROR: ~/category/package/buildlink3.mk:2: This comment indicates unfinished work (url2pkg).")
 }
 
 // Before version 5.3, pkglint wrongly warned here.
@@ -123,7 +123,8 @@ func (s *Suite) Test_ChecklinesBuildlink3Mk__name_mismatch_multiple_inclusion(c 
 	ChecklinesBuildlink3Mk(mklines)
 
 	t.CheckOutputLines(
-		"ERROR: buildlink3.mk:5: Package name mismatch between multiple-inclusion guard \"PKGBASE2\" (expected \"PKGBASE1\") and package name \"pkgbase1\" (from line 3).",
+		"ERROR: buildlink3.mk:5: Package name mismatch between multiple-inclusion guard \"PKGBASE2\" "+
+			"(expected \"PKGBASE1\") and package name \"pkgbase1\" (from line 3).",
 		"WARN: buildlink3.mk:9: Definition of BUILDLINK_API_DEPENDS is missing.")
 }
 
@@ -400,17 +401,29 @@ func (s *Suite) Test_ChecklinesBuildlink3Mk__PKGBASE_with_unknown_variable(c *ch
 		"WARN: buildlink3.mk:3: LICENSE may not be used in any file; it is a write-only variable.",
 		// FIXME: License is not a list type, although it can be appended to.
 		"WARN: buildlink3.mk:3: The list variable LICENSE should not be embedded in a word.",
+
+		"WARN: buildlink3.mk:8: LICENSE should not be evaluated at load time.",
+		"WARN: buildlink3.mk:8: LICENSE may not be used in any file; it is a write-only variable.",
+		// FIXME: License is not a list type, although it can be appended to.
+		"WARN: buildlink3.mk:8: The list variable LICENSE should not be embedded in a word.",
 		"WARN: buildlink3.mk:8: LICENSE should not be evaluated indirectly at load time.",
 		"WARN: buildlink3.mk:8: LICENSE may not be used in any file; it is a write-only variable.",
 		// FIXME: License is not a list type, although it can be appended to.
 		"WARN: buildlink3.mk:8: The list variable LICENSE should not be embedded in a word.",
+
+		"WARN: buildlink3.mk:9: LICENSE should not be evaluated at load time.",
+		"WARN: buildlink3.mk:9: LICENSE may not be used in any file; it is a write-only variable.",
+		// FIXME: License is not a list type, although it can be appended to.
+		"WARN: buildlink3.mk:9: The list variable LICENSE should not be embedded in a word.",
 		"WARN: buildlink3.mk:9: LICENSE should not be evaluated indirectly at load time.",
 		"WARN: buildlink3.mk:9: LICENSE may not be used in any file; it is a write-only variable.",
 		// FIXME: License is not a list type, although it can be appended to.
 		"WARN: buildlink3.mk:9: The list variable LICENSE should not be embedded in a word.",
+
 		"WARN: buildlink3.mk:13: LICENSE may not be used in any file; it is a write-only variable.",
 		// FIXME: License is not a list type, although it can be appended to.
 		"WARN: buildlink3.mk:13: The list variable LICENSE should not be embedded in a word.",
+
 		"WARN: buildlink3.mk:3: Please replace \"${LICENSE}\" with a simple string (also in other variables in this file).")
 }
 

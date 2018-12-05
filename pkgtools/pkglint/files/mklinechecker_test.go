@@ -7,12 +7,12 @@ func (s *Suite) Test_MkLineChecker_Check__url2pkg(c *check.C) {
 
 	t.SetupVartypes()
 
-	mkline := t.NewMkLine("fileName.mk", 1, "# url2pkg-marker")
+	mkline := t.NewMkLine("filename.mk", 1, "# url2pkg-marker")
 
 	MkLineChecker{mkline}.Check()
 
 	t.CheckOutputLines(
-		"ERROR: fileName.mk:1: This comment indicates unfinished work (url2pkg).")
+		"ERROR: filename.mk:1: This comment indicates unfinished work (url2pkg).")
 }
 
 func (s *Suite) Test_MkLineChecker_Check__buildlink3_include_prefs(c *check.C) {
@@ -23,14 +23,17 @@ func (s *Suite) Test_MkLineChecker_Check__buildlink3_include_prefs(c *check.C) {
 	t.CreateFileLines("mk/bsd.prefs.mk")
 	mklines := t.SetupFileMkLines("category/package/buildlink3.mk",
 		".include \"../../mk/bsd.prefs.mk\"")
-	// If the buildlink3.mk file is not actually created, resolving the
+	// If the buildlink3.mk file doesn't actually exist, resolving the
 	// relative path fails since that depends on the actual file system,
 	// not on syntactical paths; see os.Stat in CheckRelativePath.
+	//
+	// TODO: Refactor relpath to be independent of a filesystem.
 
 	MkLineChecker{mklines.mklines[0]}.Check()
 
 	t.CheckOutputLines(
-		"NOTE: ~/category/package/buildlink3.mk:1: For efficiency reasons, please include bsd.fast.prefs.mk instead of bsd.prefs.mk.")
+		"NOTE: ~/category/package/buildlink3.mk:1: For efficiency reasons, " +
+			"please include bsd.fast.prefs.mk instead of bsd.prefs.mk.")
 }
 
 func (s *Suite) Test_MkLineChecker_checkInclude(c *check.C) {
@@ -42,7 +45,7 @@ func (s *Suite) Test_MkLineChecker_checkInclude(c *check.C) {
 	t.CreateFileLines("graphics/jpeg/buildlink3.mk")
 	t.CreateFileLines("devel/intltool/buildlink3.mk")
 	t.CreateFileLines("devel/intltool/builtin.mk")
-	mklines := t.SetupFileMkLines("category/package/fileName.mk",
+	mklines := t.SetupFileMkLines("category/package/filename.mk",
 		MkRcsID,
 		"",
 		".include \"../../pkgtools/x11-links/buildlink3.mk\"",
@@ -53,12 +56,16 @@ func (s *Suite) Test_MkLineChecker_checkInclude(c *check.C) {
 	mklines.Check()
 
 	t.CheckOutputLines(
-		"ERROR: ~/category/package/fileName.mk:3: ../../pkgtools/x11-links/buildlink3.mk must not be included directly. "+
+		"ERROR: ~/category/package/filename.mk:3: "+
+			"../../pkgtools/x11-links/buildlink3.mk must not be included directly. "+
 			"Include \"../../mk/x11.buildlink3.mk\" instead.",
-		"ERROR: ~/category/package/fileName.mk:4: ../../graphics/jpeg/buildlink3.mk must not be included directly. "+
+		"ERROR: ~/category/package/filename.mk:4: "+
+			"../../graphics/jpeg/buildlink3.mk must not be included directly. "+
 			"Include \"../../mk/jpeg.buildlink3.mk\" instead.",
-		"WARN: ~/category/package/fileName.mk:5: Please write \"USE_TOOLS+= intltool\" instead of this line.",
-		"ERROR: ~/category/package/fileName.mk:6: ../../devel/intltool/builtin.mk must not be included directly. "+
+		"WARN: ~/category/package/filename.mk:5: "+
+			"Please write \"USE_TOOLS+= intltool\" instead of this line.",
+		"ERROR: ~/category/package/filename.mk:6: "+
+			"../../devel/intltool/builtin.mk must not be included directly. "+
 			"Include \"../../devel/intltool/buildlink3.mk\" instead.")
 }
 
@@ -70,8 +77,22 @@ func (s *Suite) Test_MkLineChecker_checkInclude__Makefile(c *check.C) {
 	MkLineChecker{mkline}.checkInclude()
 
 	t.CheckOutputLines(
-		"ERROR: ~/Makefile:2: \"other/package/Makefile\" does not exist.",
+		"ERROR: ~/Makefile:2: Relative path \"../../other/package/Makefile\" does not exist.",
 		"ERROR: ~/Makefile:2: Other Makefiles must not be included directly.")
+}
+
+func (s *Suite) Test_MkLineChecker_checkInclude__Makefile_exists(c *check.C) {
+	t := s.Init(c)
+
+	t.CreateFileLines("other/existing/Makefile")
+	t.SetupPackage("category/package",
+		".include \"../../other/existing/Makefile\"",
+		".include \"../../other/not-found/Makefile\"")
+
+	G.checkdirPackage(t.File("category/package"))
+
+	t.CheckOutputLines(
+		"ERROR: ~/category/package/Makefile:20: Cannot read \"../../other/existing/Makefile\".")
 }
 
 func (s *Suite) Test_MkLineChecker_checkDirective(c *check.C) {
@@ -79,7 +100,7 @@ func (s *Suite) Test_MkLineChecker_checkDirective(c *check.C) {
 
 	t.SetupVartypes()
 
-	mklines := t.NewMkLines("category/package/fileName.mk",
+	mklines := t.NewMkLines("category/package/filename.mk",
 		MkRcsID,
 		"",
 		".for",
@@ -96,26 +117,50 @@ func (s *Suite) Test_MkLineChecker_checkDirective(c *check.C) {
 		"",
 		".for var in a b c",
 		".endfor",
-		".undef var",
+		".undef var")
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		"ERROR: category/package/filename.mk:3: \".for\" requires arguments.",
+		"ERROR: category/package/filename.mk:6: \".if\" requires arguments.",
+		"ERROR: category/package/filename.mk:7: \".else\" does not take arguments. "+
+			"If you meant \"else if\", use \".elif\".",
+		"ERROR: category/package/filename.mk:8: \".endif\" does not take arguments.",
+		"WARN: category/package/filename.mk:10: The \".ifdef\" directive is deprecated. "+
+			"Please use \".if defined(FNAME_MK)\" instead.",
+		"WARN: category/package/filename.mk:12: The \".ifndef\" directive is deprecated. "+
+			"Please use \".if !defined(FNAME_MK)\" instead.",
+		"NOTE: category/package/filename.mk:17: Using \".undef\" after a \".for\" loop is unnecessary.")
+}
+
+func (s *Suite) Test_MkLineChecker_checkDirective__for_loop_varname(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupVartypes()
+
+	mklines := t.NewMkLines("filename.mk",
+		MkRcsID,
 		"",
-		".for VAR in a b c",
+		".for VAR in a b c", // Should be lowercase.
 		".endfor",
 		"",
-		".for $ in a b c",
+		".for _var_ in a b c", // Should be written without underscores.
+		".endfor",
+		"",
+		".for .var. in a b c", // Should be written without dots.
+		".endfor",
+		"",
+		".for ${VAR} in a b c", // The variable name really must be an identifier.
 		".endfor")
 
 	mklines.Check()
 
 	t.CheckOutputLines(
-		"ERROR: category/package/fileName.mk:3: \".for\" requires arguments.",
-		"ERROR: category/package/fileName.mk:6: \".if\" requires arguments.",
-		"ERROR: category/package/fileName.mk:7: \".else\" does not take arguments. If you meant \"else if\", use \".elif\".",
-		"ERROR: category/package/fileName.mk:8: \".endif\" does not take arguments.",
-		"WARN: category/package/fileName.mk:10: The \".ifdef\" directive is deprecated. Please use \".if defined(FNAME_MK)\" instead.",
-		"WARN: category/package/fileName.mk:12: The \".ifndef\" directive is deprecated. Please use \".if !defined(FNAME_MK)\" instead.",
-		"NOTE: category/package/fileName.mk:17: Using \".undef\" after a \".for\" loop is unnecessary.",
-		"WARN: category/package/fileName.mk:19: .for variable names should not contain uppercase letters.",
-		"ERROR: category/package/fileName.mk:22: Invalid variable name \"$\".")
+		"WARN: filename.mk:3: The variable name \"VAR\" in the .for loop should not contain uppercase letters.",
+		"WARN: filename.mk:6: Variable names starting with an underscore (_var_) are reserved for internal pkgsrc use.",
+		"ERROR: filename.mk:9: Invalid variable name \".var.\".",
+		"ERROR: filename.mk:12: Invalid variable name \"${VAR}\".")
 }
 
 func (s *Suite) Test_MkLineChecker_checkDependencyRule(c *check.C) {
@@ -123,7 +168,7 @@ func (s *Suite) Test_MkLineChecker_checkDependencyRule(c *check.C) {
 
 	t.SetupVartypes()
 
-	mklines := t.NewMkLines("category/package/fileName.mk",
+	mklines := t.NewMkLines("category/package/filename.mk",
 		MkRcsID,
 		"",
 		".PHONY: target-1",
@@ -136,19 +181,16 @@ func (s *Suite) Test_MkLineChecker_checkDependencyRule(c *check.C) {
 	mklines.Check()
 
 	t.CheckOutputLines(
-		"WARN: category/package/fileName.mk:8: Unusual target \"target-3\".")
+		"WARN: category/package/filename.mk:8: Unusual target \"target-3\".")
 }
 
-func (s *Suite) Test_MkLineChecker_CheckVartype__simple_type(c *check.C) {
+func (s *Suite) Test_MkLineChecker_checkVartype__simple_type(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupCommandLine("-Wtypes")
 	t.SetupVartypes()
 
-	vartype1 := G.Pkgsrc.vartypes["COMMENT"]
-	c.Assert(vartype1, check.NotNil)
-	c.Check(vartype1.guessed, equals, false)
-
+	// Since COMMENT is defined in vardefs.go its type is certain instead of guessed.
 	vartype := G.Pkgsrc.VariableType("COMMENT")
 
 	c.Assert(vartype, check.NotNil)
@@ -156,40 +198,44 @@ func (s *Suite) Test_MkLineChecker_CheckVartype__simple_type(c *check.C) {
 	c.Check(vartype.guessed, equals, false)
 	c.Check(vartype.kindOfList, equals, lkNone)
 
-	MkLineChecker{dummyMkLine}.CheckVartype("COMMENT", opAssign, "A nice package", "")
+	mkline := t.NewMkLine("Makefile", 123, "COMMENT=\tA nice package")
+	MkLineChecker{mkline}.checkVartype(mkline.Varname(), mkline.Op(), mkline.Value(), mkline.VarassignComment())
 
 	t.CheckOutputLines(
-		"WARN: COMMENT should not begin with \"A\".")
+		"WARN: Makefile:123: COMMENT should not begin with \"A\".")
 }
 
-func (s *Suite) Test_MkLineChecker_CheckVartype(c *check.C) {
+func (s *Suite) Test_MkLineChecker_checkVartype(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupVartypes()
-	mkline := t.NewMkLine("fileName", 1, "DISTNAME=gcc-${GCC_VERSION}")
+	mkline := t.NewMkLine("filename", 1, "DISTNAME=gcc-${GCC_VERSION}")
 
-	MkLineChecker{mkline}.CheckVartype("DISTNAME", opAssign, "gcc-${GCC_VERSION}", "")
+	MkLineChecker{mkline}.checkVartype("DISTNAME", opAssign, "gcc-${GCC_VERSION}", "")
 
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_MkLineChecker_CheckVartype__skip(c *check.C) {
+// The command line option -Wno-types can be used to suppress the type checks.
+// Suppressing it is rarely needed and comes from Feb 12 2005 when this feature was introduced.
+// Since then the type system has matured and proven effective.
+func (s *Suite) Test_MkLineChecker_checkVartype__skip(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupCommandLine("-Wno-types")
 	t.SetupVartypes()
-	mkline := t.NewMkLine("fileName", 1, "DISTNAME=invalid:::distname")
+	mkline := t.NewMkLine("filename", 1, "DISTNAME=invalid:::distname")
 
 	MkLineChecker{mkline}.Check()
 
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_MkLineChecker_CheckVartype__append_to_non_list(c *check.C) {
+func (s *Suite) Test_MkLineChecker_checkVartype__append_to_non_list(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupVartypes()
-	mklines := t.NewMkLines("fileName.mk",
+	mklines := t.NewMkLines("filename.mk",
 		MkRcsID,
 		"DISTNAME+=\tsuffix",
 		"COMMENT=\tComment for",
@@ -198,8 +244,8 @@ func (s *Suite) Test_MkLineChecker_CheckVartype__append_to_non_list(c *check.C) 
 	mklines.Check()
 
 	t.CheckOutputLines(
-		"WARN: fileName.mk:2: The variable DISTNAME may not be appended to (only set, given a default value) in this file.",
-		"WARN: fileName.mk:2: The \"+=\" operator should only be used with lists, not with DISTNAME.")
+		"WARN: filename.mk:2: The variable DISTNAME may not be appended to (only set, given a default value) in this file.",
+		"WARN: filename.mk:2: The \"+=\" operator should only be used with lists, not with DISTNAME.")
 }
 
 // Pkglint once interpreted all lists as consisting of shell tokens,
@@ -209,21 +255,21 @@ func (s *Suite) Test_MkLineChecker_checkVarassign__URL_with_shell_special_charac
 
 	G.Pkg = NewPackage(t.File("graphics/gimp-fix-ca"))
 	t.SetupVartypes()
-	mkline := t.NewMkLine("fileName", 10, "MASTER_SITES=http://registry.gimp.org/file/fix-ca.c?action=download&id=9884&file=")
+	mkline := t.NewMkLine("filename", 10, "MASTER_SITES=http://registry.gimp.org/file/fix-ca.c?action=download&id=9884&file=")
 
 	MkLineChecker{mkline}.checkVarassign()
 
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_MkLineChecker_Check__conditions(c *check.C) {
+func (s *Suite) Test_MkLineChecker_checkDirectiveCond(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupCommandLine("-Wtypes")
 	t.SetupVartypes()
 
 	testCond := func(cond string, output ...string) {
-		MkLineChecker{t.NewMkLine("fileName", 1, cond)}.checkDirectiveCond()
+		MkLineChecker{t.NewMkLine("filename", 1, cond)}.checkDirectiveCond()
 		if len(output) > 0 {
 			t.CheckOutputLines(output...)
 		} else {
@@ -232,52 +278,40 @@ func (s *Suite) Test_MkLineChecker_Check__conditions(c *check.C) {
 	}
 
 	testCond(".if !empty(PKGSRC_COMPILER:Mmycc)",
-		"WARN: fileName:1: The pattern \"mycc\" cannot match any of "+
+		"WARN: filename:1: The pattern \"mycc\" cannot match any of "+
 			"{ ccache ccc clang distcc f2c gcc hp icc ido "+
 			"mipspro mipspro-ucode pcc sunpro xlc } for PKGSRC_COMPILER.")
 
 	testCond(".elif ${A} != ${B}")
 
 	testCond(".if ${HOMEPAGE} == \"mailto:someone@example.org\"",
-		"WARN: fileName:1: \"mailto:someone@example.org\" is not a valid URL.")
+		"WARN: filename:1: \"mailto:someone@example.org\" is not a valid URL.")
 
 	testCond(".if !empty(PKGSRC_RUN_TEST:M[Y][eE][sS])",
-		"WARN: fileName:1: PKGSRC_RUN_TEST should be matched against \"[yY][eE][sS]\" or \"[nN][oO]\", not \"[Y][eE][sS]\".")
+		"WARN: filename:1: PKGSRC_RUN_TEST should be matched "+
+			"against \"[yY][eE][sS]\" or \"[nN][oO]\", not \"[Y][eE][sS]\".")
 
 	testCond(".if !empty(IS_BUILTIN.Xfixes:M[yY][eE][sS])")
 
 	testCond(".if !empty(${IS_BUILTIN.Xfixes:M[yY][eE][sS]})",
-		"WARN: fileName:1: The empty() function takes a variable name as parameter, not a variable expression.")
+		"WARN: filename:1: The empty() function takes a variable name as parameter, "+
+			"not a variable expression.")
 
-	testCond(".if ${EMUL_PLATFORM} == \"linux-x386\"",
-		"WARN: fileName:1: "+
-			"\"x386\" is not valid for the hardware architecture part of EMUL_PLATFORM. "+
-			"Use one of "+
-			"{ aarch64 aarch64eb alpha amd64 arc arm arm26 arm32 cobalt coldfire convex "+
-			"dreamcast earm earmeb earmhf earmhfeb earmv4 earmv4eb earmv5 earmv5eb earmv6 earmv6eb "+
-			"earmv6hf earmv6hfeb earmv7 earmv7eb earmv7hf earmv7hfeb evbarm hpcmips hpcsh hppa hppa64 "+
-			"i386 i586 i686 ia64 m68000 m68k m88k mips mips64 mips64eb mips64el mipseb mipsel mipsn32 "+
-			"mlrisc ns32k pc532 pmax powerpc powerpc64 rs6000 s390 sh3eb sh3el sparc sparc64 vax x86_64 "+
-			"} instead.")
+	testCond(".if ${PKGSRC_COMPILER} == \"msvc\"",
+		"WARN: filename:1: \"msvc\" is not valid for PKGSRC_COMPILER. "+
+			"Use one of { ccache ccc clang distcc f2c gcc hp icc ido mipspro mipspro-ucode pcc sunpro xlc } instead.",
+		"WARN: filename:1: Use ${PKGSRC_COMPILER:Mmsvc} instead of the == operator.")
 
-	testCond(".if ${EMUL_PLATFORM:Mlinux-x386}",
-		"WARN: fileName:1: "+
-			"The pattern \"x386\" cannot match any of { aarch64 aarch64eb alpha amd64 arc arm arm26 "+
-			"arm32 cobalt coldfire convex dreamcast earm earmeb earmhf earmhfeb earmv4 earmv4eb "+
-			"earmv5 earmv5eb earmv6 earmv6eb earmv6hf earmv6hfeb earmv7 earmv7eb earmv7hf "+
-			"earmv7hfeb evbarm hpcmips hpcsh hppa hppa64 i386 i586 i686 ia64 m68000 m68k m88k "+
-			"mips mips64 mips64eb mips64el mipseb mipsel mipsn32 mlrisc ns32k pc532 pmax powerpc powerpc64 "+
-			"rs6000 s390 sh3eb sh3el sparc sparc64 vax x86_64 } "+
-			"for the hardware architecture part of EMUL_PLATFORM.",
-		"NOTE: fileName:1: EMUL_PLATFORM should be compared using == instead of the :M or :N modifier without wildcards.")
+	testCond(".if ${PKG_LIBTOOL:Mlibtool}",
+		"NOTE: filename:1: PKG_LIBTOOL should be compared using == instead of matching against \":Mlibtool\".")
 
 	testCond(".if ${MACHINE_PLATFORM:MUnknownOS-*-*} || ${MACHINE_ARCH:Mx86}",
-		"WARN: fileName:1: "+
+		"WARN: filename:1: "+
 			"The pattern \"UnknownOS\" cannot match any of "+
 			"{ AIX BSDOS Bitrig Cygwin Darwin DragonFly FreeBSD FreeMiNT GNUkFreeBSD HPUX Haiku "+
 			"IRIX Interix Linux Minix MirBSD NetBSD OSF1 OpenBSD QNX SCO_SV SunOS UnixWare "+
 			"} for the operating system part of MACHINE_PLATFORM.",
-		"WARN: fileName:1: "+
+		"WARN: filename:1: "+
 			"The pattern \"x86\" cannot match any of "+
 			"{ aarch64 aarch64eb alpha amd64 arc arm arm26 arm32 cobalt coldfire convex dreamcast earm "+
 			"earmeb earmhf earmhfeb earmv4 earmv4eb earmv5 earmv5eb earmv6 earmv6eb earmv6hf earmv6hfeb "+
@@ -285,7 +319,7 @@ func (s *Suite) Test_MkLineChecker_Check__conditions(c *check.C) {
 			"m68000 m68k m88k mips mips64 mips64eb mips64el mipseb mipsel mipsn32 mlrisc ns32k pc532 pmax "+
 			"powerpc powerpc64 rs6000 s390 sh3eb sh3el sparc sparc64 vax x86_64 "+
 			"} for MACHINE_ARCH.",
-		"NOTE: fileName:1: MACHINE_ARCH should be compared using == instead of the :M or :N modifier without wildcards.")
+		"NOTE: filename:1: MACHINE_ARCH should be compared using == instead of matching against \":Mx86\".")
 
 	testCond(".if ${MASTER_SITES:Mftp://*} == \"ftp://netbsd.org/\"")
 }
@@ -339,6 +373,20 @@ func (s *Suite) Test_MkLineChecker_checkVarassignPermissions__infrastructure(c *
 	t.CheckOutputEmpty()
 }
 
+func (s *Suite) Test_MkLineChecker_checkVarassignVaruse(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupVartypes()
+
+	mkline := t.NewMkLine("module.mk", 123, "PLIST_SUBST+=\tLOCALBASE=${LOCALBASE:Q}")
+
+	MkLineChecker{mkline}.checkVarassignVaruse()
+
+	t.CheckOutputLines(
+		"WARN: module.mk:123: Please use PREFIX instead of LOCALBASE.",
+		"NOTE: module.mk:123: The :Q operator isn't necessary for ${LOCALBASE} here.")
+}
+
 func (s *Suite) Test_MkLineChecker_checkVarusePermissions(c *check.C) {
 	t := s.Init(c)
 
@@ -371,11 +419,10 @@ func (s *Suite) Test_MkLineChecker_checkVarusePermissions__load_time(c *check.C)
 
 	mklines.Check()
 
-	// Evaluating PKG_SYSCONFDIR.* at load time is probably ok, though
-	// pkglint cannot prove anything here.
+	// Evaluating PKG_SYSCONFDIR.* at load time is probably ok,
+	// though pkglint cannot prove anything here.
 	//
-	// Evaluating .CURDIR at load time is ok since it is defined from
-	// the beginning.
+	// Evaluating .CURDIR at load time is definitely ok since it is defined from the beginning.
 	t.CheckOutputLines(
 		"NOTE: options.mk:2: This variable value should be aligned to column 17.")
 }
@@ -423,7 +470,7 @@ func (s *Suite) Test_MkLineChecker_checkVarusePermissions__PKGREVISION(c *check.
 		"WARN: any.mk:2: PKGREVISION may not be used in any file; it is a write-only variable.")
 }
 
-func (s *Suite) Test_MkLineChecker__warn_varuse_LOCALBASE(c *check.C) {
+func (s *Suite) Test_MkLineChecker_Check__warn_varuse_LOCALBASE(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupVartypes()
@@ -438,14 +485,22 @@ func (s *Suite) Test_MkLineChecker__warn_varuse_LOCALBASE(c *check.C) {
 func (s *Suite) Test_MkLineChecker_CheckRelativePkgdir(c *check.C) {
 	t := s.Init(c)
 
-	mklines := t.SetupFileMkLines("Makefile",
+	t.CreateFileLines("other/package/Makefile")
+	// Must be in the filesystem because of directory references.
+	mklines := t.SetupFileMkLines("category/package/Makefile",
 		"# dummy")
+	ck := MkLineChecker{mklines.mklines[0]}
 
-	MkLineChecker{mklines.mklines[0]}.CheckRelativePkgdir("../pkgbase")
+	ck.CheckRelativePkgdir("../pkgbase")
+	ck.CheckRelativePkgdir("../../other/package")
+	ck.CheckRelativePkgdir("../../other/does-not-exist")
 
+	// FIXME: The diagnostics for does-not-exist are redundant.
 	t.CheckOutputLines(
-		"ERROR: ~/Makefile:1: \"../pkgbase\" does not exist.",
-		"WARN: ~/Makefile:1: \"../pkgbase\" is not a valid relative package directory.")
+		"ERROR: ~/category/package/Makefile:1: Relative path \"../pkgbase\" does not exist.",
+		"WARN: ~/category/package/Makefile:1: \"../pkgbase\" is not a valid relative package directory.",
+		"ERROR: ~/category/package/Makefile:1: Relative path \"../../other/does-not-exist\" does not exist.",
+		"ERROR: ~/category/package/Makefile:1: There is no package in \"other/does-not-exist\".")
 }
 
 // PR pkg/46570, item 2
@@ -461,37 +516,87 @@ func (s *Suite) Test_MkLineChecker__unclosed_varuse(c *check.C) {
 	t.CheckOutputLines(
 		"WARN: Makefile:2: Unclosed Make variable starting at \"${EGDIR/apparmor.d $...\".",
 		"WARN: Makefile:2: EGDIRS is defined but not used.",
+
+		// XXX: This warning is redundant because of the "Unclosed" warning above.
 		"WARN: Makefile:2: Pkglint parse error in MkLine.Tokenize at "+
 			"\"${EGDIR/apparmor.d ${EGDIR/dbus-1/system.d ${EGDIR/pam.d\".")
 }
 
-func (s *Suite) Test_MkLineChecker__Varuse_Modifier_L(c *check.C) {
+func (s *Suite) Test_MkLineChecker_Check__varuse_modifier_L(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupVartypes()
-	G.Mk = t.NewMkLines("x11/xkeyboard-config/Makefile",
-		"FILES_SUBST+=XKBCOMP_SYMLINK=${${XKBBASE}/xkbcomp:L:Q}")
+	mklines := t.NewMkLines("x11/xkeyboard-config/Makefile",
+		"FILES_SUBST+=XKBCOMP_SYMLINK=${${XKBBASE}/xkbcomp:L:Q}",
+		"FILES_SUBST+=XKBCOMP_SYMLINK=${${XKBBASE}/xkbcomp:Q}")
 
-	MkLineChecker{G.Mk.mklines[0]}.Check()
+	MkLineChecker{mklines.mklines[0]}.Check()
+	MkLineChecker{mklines.mklines[1]}.Check()
 
-	// Don't warn that ${XKBBASE}/xkbcomp is used but not defined.
-	t.CheckOutputEmpty()
+	// In line 1, don't warn that ${XKBBASE}/xkbcomp is used but not defined.
+	// This is because the :L modifier interprets everything before as an expression
+	// instead of a variable name.
+	//
+	// In line 2 the :L modifier is missing, therefore ${XKBBASE}/xkbcomp is the
+	// name of another variable, and that variable is not known. Only XKBBASE is known.
+	//
+	// FIXME: The below warnings are wrong because the MkParser does not recognize the
+	// slash as part of a variable name. Because of that, parsing stops before the $.
+	// The warning "Unclosed Make variable" wrongly assumes that any parse error from
+	// a variable use is because of unclosed braces, which it isn't in this case.h
+	t.CheckOutputLines(
+		"WARN: x11/xkeyboard-config/Makefile:2: Unclosed Make variable starting at \"${${XKBBASE}/xkbcomp...\".",
+		"WARN: x11/xkeyboard-config/Makefile:2: Unclosed Make variable starting at \"${${XKBBASE}/xkbcomp...\".")
 }
 
 func (s *Suite) Test_MkLineChecker_checkDirectiveCond__comparison_with_shell_command(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupVartypes()
-	G.Mk = t.NewMkLines("security/openssl/Makefile",
+	mklines := t.NewMkLines("security/openssl/Makefile",
 		MkRcsID,
 		".if ${PKGSRC_COMPILER} == \"gcc\" && ${CC} == \"cc\"",
 		".endif")
 
-	G.Mk.Check()
+	mklines.Check()
 
 	// Don't warn about unknown shell command "cc".
 	t.CheckOutputLines(
 		"WARN: security/openssl/Makefile:2: Use ${PKGSRC_COMPILER:Mgcc} instead of the == operator.")
+}
+
+func (s *Suite) Test_MkLineChecker_checkDirectiveCondEmpty(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupVartypes()
+	mkline := t.NewMkLine("module.mk", 123, ".if ${PKGPATH} == \"category/package\"")
+	ck := MkLineChecker{mkline}
+
+	// FIXME: checkDirectiveCondEmpty cannot know whether it is empty(...) or !empty(...).
+	// It must know that to generate the proper diagnostics.
+
+	ck.checkDirectiveCondEmpty(NewMkVarUse("PKGPATH", "Mpattern"))
+
+	// When the pattern contains placeholders, it cannot be converted to == or !=.
+	ck.checkDirectiveCondEmpty(NewMkVarUse("PKGPATH", "Mpa*n"))
+
+	ck.checkDirectiveCondEmpty(NewMkVarUse("PKGPATH", "tl", "Mpattern"))
+
+	ck.checkDirectiveCondEmpty(NewMkVarUse("PKGPATH", "Ncategory/package"))
+
+	// ${PKGPATH:None:Ntwo} is a short variant of ${PKGPATH} != "one" && ${PKGPATH} != "two",
+	// therefore no note is logged in this case.
+	ck.checkDirectiveCondEmpty(NewMkVarUse("PKGPATH", "None", "Ntwo"))
+
+	// Note: this combination doesn't make sense since the patterns "one" and "two" don't overlap.
+	ck.checkDirectiveCondEmpty(NewMkVarUse("PKGPATH", "Mone", "Mtwo"))
+
+	t.CheckOutputLines(
+		"NOTE: module.mk:123: PKGPATH should be compared using == instead of matching against \":Mpattern\".",
+		"NOTE: module.mk:123: PKGPATH should be compared using == instead of matching against \":Mpattern\".",
+		"NOTE: module.mk:123: PKGPATH should be compared using != instead of matching against \":Ncategory/package\".",
+		"NOTE: module.mk:123: PKGPATH should be compared using == instead of matching against \":Mone\".",
+		"NOTE: module.mk:123: PKGPATH should be compared using == instead of matching against \":Mtwo\".")
 }
 
 func (s *Suite) Test_MkLineChecker_checkDirectiveCond__comparing_PKGSRC_COMPILER_with_eqeq(c *check.C) {
@@ -509,7 +614,7 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveCond__comparing_PKGSRC_COMPILER
 		"WARN: audio/pulseaudio/Makefile:2: Use ${PKGSRC_COMPILER:Mclang} instead of the == operator.")
 }
 
-func (s *Suite) Test_MkLineChecker_CheckVartype__CFLAGS_with_backticks(c *check.C) {
+func (s *Suite) Test_MkLineChecker_checkVartype__CFLAGS_with_backticks(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupVartypes()
@@ -523,7 +628,8 @@ func (s *Suite) Test_MkLineChecker_CheckVartype__CFLAGS_with_backticks(c *check.
 	c.Check(words, deepEquals, []string{"`pkg-config pidgin --cflags`"})
 	c.Check(rest, equals, "")
 
-	MkLineChecker{G.Mk.mklines[1]}.CheckVartype("CFLAGS", opAssignAppend, "`pkg-config pidgin --cflags`", "")
+	ck := MkLineChecker{G.Mk.mklines[1]}
+	ck.checkVartype("CFLAGS", opAssignAppend, "`pkg-config pidgin --cflags`", "")
 
 	// No warning about "`pkg-config" being an unknown CFlag.
 	t.CheckOutputEmpty()
@@ -532,7 +638,7 @@ func (s *Suite) Test_MkLineChecker_CheckVartype__CFLAGS_with_backticks(c *check.
 // See PR 46570, Ctrl+F "4. Shell quoting".
 // Pkglint is correct, since the shell sees this definition for
 // CPPFLAGS as three words, not one word.
-func (s *Suite) Test_MkLineChecker_CheckVartype__CFLAGS(c *check.C) {
+func (s *Suite) Test_MkLineChecker_checkVartype__CFLAGS(c *check.C) {
 	t := s.Init(c)
 
 	t.SetupVartypes()
@@ -656,7 +762,7 @@ func (s *Suite) Test_MkLineChecker_CheckVaruseShellword__q_not_needed(c *check.C
 	G.CheckDirent(pkg)
 
 	t.CheckOutputLines(
-		"WARN: ~/category/package/Makefile:5: The :Q operator should not be used for ${HOMEPAGE} here.")
+		"NOTE: ~/category/package/Makefile:5: The :Q operator isn't necessary for ${HOMEPAGE} here.")
 }
 
 // The ${VARNAME:=suffix} expression should only be used with lists.
@@ -693,6 +799,42 @@ func (s *Suite) Test_MkLineChecker_CheckVaruse__for(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
+// When a parameterized variable is defined in the pkgsrc infrastructure,
+// it does not generate a warning about being "used but not defined".
+// Even if the variable parameter differs, like .Linux and .SunOS in this
+// case. This pattern is typical for pkgsrc, therefore pkglint doesn't
+// check that the variable names match exactly.
+func (s *Suite) Test_MkLineChecker_CheckVaruse__varcanon(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupVartypes()
+	t.SetupPkgsrc()
+	t.CreateFileLines("mk/sys-vars.mk",
+		MkRcsID,
+		"CPPPATH.Linux=\t/usr/bin/cpp")
+	G.Pkgsrc.LoadInfrastructure()
+
+	ck := MkLineChecker{t.NewMkLine("module.mk", 101, "COMMENT=\t${CPPPATH.SunOS}")}
+
+	ck.CheckVaruse(NewMkVarUse("CPPPATH.SunOS"), &VarUseContext{
+		vartype: &Vartype{
+			kindOfList: lkNone,
+			basicType:  BtPathname,
+			aclEntries: nil,
+			guessed:    true,
+		},
+		time:       vucTimeRun,
+		quoting:    vucQuotPlain,
+		IsWordPart: false,
+	})
+
+	t.CheckOutputEmpty()
+}
+
+// Any variable that is defined in the pkgsrc infrastructure in mk/**/*.mk is
+// considered defined, and no "used but not defined" warning is logged for it.
+//
+// See Pkgsrc.loadUntypedVars.
 func (s *Suite) Test_MkLineChecker_CheckVaruse__defined_in_infrastructure(c *check.C) {
 	t := s.Init(c)
 
@@ -727,8 +869,9 @@ func (s *Suite) Test_MkLineChecker_CheckVaruse__build_defs(c *check.C) {
 	t.SetupVartypes()
 	mklines := t.SetupFileMkLines("options.mk",
 		MkRcsID,
-		"COMMENT=        ${VARBASE} ${X11_TYPE}",
-		"BUILD_DEFS+=    X11_TYPE")
+		"COMMENT=                ${VARBASE} ${X11_TYPE}",
+		"PKG_FAIL_REASON+=       ${VARBASE} ${X11_TYPE}",
+		"BUILD_DEFS+=            X11_TYPE")
 
 	mklines.Check()
 
@@ -748,10 +891,28 @@ func (s *Suite) Test_MkLineChecker_CheckVaruse__complicated_range(c *check.C) {
 
 	// FIXME: The check is called two times, even though it only produces a single NOTE.
 	t.CheckOutputLines(
-		"NOTE: mk/compiler/gcc.mk:150: The modifier \":C/^/_asdf_/1:M_asdf_*:S/^_asdf_//\" can be written as \":[1]\".",
-		"AUTOFIX: mk/compiler/gcc.mk:150: Replacing \":C/^/_asdf_/1:M_asdf_*:S/^_asdf_//\" with \":[1]\".",
+		"NOTE: mk/compiler/gcc.mk:150: "+
+			"The modifier \":C/^/_asdf_/1:M_asdf_*:S/^_asdf_//\" can be written as \":[1]\".",
+		"AUTOFIX: mk/compiler/gcc.mk:150: "+
+			"Replacing \":C/^/_asdf_/1:M_asdf_*:S/^_asdf_//\" with \":[1]\".",
 		"-\tCC:=\t${CC:C/^/_asdf_/1:M_asdf_*:S/^_asdf_//}",
 		"+\tCC:=\t${CC:[1]}")
+}
+
+func (s *Suite) Test_MkLineChecker_CheckVaruse__deprecated_PKG_DEBUG(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupVartypes()
+	G.Pkgsrc.initDeprecatedVars()
+
+	mkline := t.NewMkLine("module.mk", 123,
+		"\t${_PKG_SILENT}${_PKG_DEBUG} :")
+
+	MkLineChecker{mkline}.Check()
+
+	t.CheckOutputLines(
+		"WARN: module.mk:123: Use of \"_PKG_SILENT\" is deprecated. Use RUN (with more error checking) instead.",
+		"WARN: module.mk:123: Use of \"_PKG_DEBUG\" is deprecated. Use RUN (with more error checking) instead.")
 }
 
 func (s *Suite) Test_MkLineChecker_checkVarassignSpecific(c *check.C) {
@@ -759,7 +920,6 @@ func (s *Suite) Test_MkLineChecker_checkVarassignSpecific(c *check.C) {
 
 	t.SetupPkgsrc()
 	G.Pkgsrc.LoadInfrastructure()
-
 	t.SetupCommandLine("-Wall,no-space")
 	t.SetupVartypes()
 	mklines := t.SetupFileMkLines("module.mk",
@@ -776,12 +936,13 @@ func (s *Suite) Test_MkLineChecker_checkVarassignSpecific(c *check.C) {
 
 	mklines.Check()
 
+	// TODO: Split this test into several, one for each topic.
 	t.CheckOutputLines(
 		"WARN: ~/module.mk:2: Please use the RCD_SCRIPTS mechanism to install rc.d scripts automatically to ${RCD_SCRIPTS_EXAMPLEDIR}.",
 		"WARN: ~/module.mk:3: _TOOLS_VARNAME.sed is defined but not used.",
 		"WARN: ~/module.mk:3: Variable names starting with an underscore (_TOOLS_VARNAME.sed) are reserved for internal pkgsrc use.",
-		"WARN: ~/module.mk:4: PKGNAME should not be used in DIST_SUBDIR, as it includes the PKGREVISION. Please use PKGNAME_NOREV instead.",
-		"WARN: ~/module.mk:5: PKGNAME should not be used in WRKSRC, as it includes the PKGREVISION. Please use PKGNAME_NOREV instead.",
+		"WARN: ~/module.mk:4: PKGNAME should not be used in DIST_SUBDIR as it includes the PKGREVISION. Please use PKGNAME_NOREV instead.",
+		"WARN: ~/module.mk:5: PKGNAME should not be used in WRKSRC as it includes the PKGREVISION. Please use PKGNAME_NOREV instead.",
 		"WARN: ~/module.mk:6: SITES_distfile.tar.gz is defined but not used.",
 		"WARN: ~/module.mk:6: SITES_* is deprecated. Please use SITES.* instead.",
 		"WARN: ~/module.mk:7: The variable PYTHON_VERSIONS_ACCEPTED may not be set "+
@@ -812,6 +973,36 @@ func (s *Suite) Test_MkLineChecker_checkText(c *check.C) {
 		"WARN: ~/module.mk:3: Use of \"GAMEGRP\" is deprecated. Use GAMES_GROUP instead.")
 }
 
+func (s *Suite) Test_MkLineChecker_checkText__WRKSRC(c *check.C) {
+	t := s.Init(c)
+
+	t.SetupCommandLine("-Wall", "--explain")
+	mklines := t.SetupFileMkLines("module.mk",
+		MkRcsID,
+		"pre-configure:",
+		"\tcd ${WRKSRC}/..")
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		"WARN: ~/module.mk:3: Building the package should take place entirely inside ${WRKSRC}, not \"${WRKSRC}/..\".",
+		"",
+		"\tWRKSRC should be defined so that there is no need to do anything",
+		"\toutside of this directory.",
+		"",
+		"\tExample:",
+		"",
+		"\t\tWRKSRC=\t${WRKDIR}",
+		"\t\tCONFIGURE_DIRS=\t${WRKSRC}/lib ${WRKSRC}/src",
+		"\t\tBUILD_DIRS=\t${WRKSRC}/lib ${WRKSRC}/src ${WRKSRC}/cmd",
+		"",
+		"\tSee the pkgsrc guide, section \"Directories used during the build",
+		"\tprocess\":",
+		"\thttps://www.NetBSD.org/docs/pkgsrc/pkgsrc.html#build.builddirs",
+		"",
+		"WARN: ~/module.mk:3: WRKSRC is used but not defined.")
+}
+
 func (s *Suite) Test_MkLineChecker_CheckRelativePath(c *check.C) {
 	t := s.Init(c)
 
@@ -838,5 +1029,6 @@ func (s *Suite) Test_MkLineChecker_CheckRelativePath(c *check.C) {
 		"ERROR: ~/category/package/module.mk:2: A main pkgsrc package must not depend on a pkgsrc-wip package.",
 		"ERROR: ~/category/package/module.mk:3: A main pkgsrc package must not depend on a pkgsrc-wip package.",
 		"WARN: ~/category/package/module.mk:5: LATEST_PYTHON is used but not defined.",
+		// TODO: This warning is unspecific, there is also a pkglint warning "should be ../../category/package".
 		"WARN: ~/category/package/module.mk:11: Invalid relative path \"../package/module.mk\".")
 }

@@ -1,6 +1,7 @@
-# $NetBSD: Makefile,v 1.51 2018/11/23 07:30:02 ryoon Exp $
+# $NetBSD: Makefile,v 1.53 2018/12/03 13:51:52 mlelstv Exp $
 
 DISTNAME=	samba-${VERSION}
+PKGREVISION=	1
 CATEGORIES=	net
 MASTER_SITES=	http://download.samba.org/pub/samba/stable/
 
@@ -11,7 +12,7 @@ LICENSE=	gnu-gpl-v3
 
 DEPENDS+=	${PYPKGPREFIX}-expat-[0-9]*:../../textproc/py-expat
 
-VERSION=	4.9.2
+VERSION=	4.9.3
 CONFLICTS+=	ja-samba-[0-9]* tdb-[0-9]* winbind-[0-9]*
 
 GCC_REQD+=	4.4
@@ -31,7 +32,7 @@ SMB_LOCALSTATE?=	${VARBASE}
 SMB_INFO?=		${PREFIX}/info
 SMB_MAN?=		${PREFIX}/${PKGMANDIR}
 SMB_STATE?=		${VARBASE}/run
-SMB_PRIVATE?=		${SMB_LIB}/samba/private
+SMB_PRIVATE?=		${PKG_SYSCONFDIR}/private
 SMB_PID?=		${VARBASE}/run
 SMB_CACHE?=		${VARBASE}/run
 SMB_LOCK?=		${VARBASE}/run
