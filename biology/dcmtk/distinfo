@@ -1,0 +1,7 @@
+$NetBSD$
+
+SHA1 (dcmtk/DCMTK-3.6.4.tar.gz) = 86953422d2f1eb718313d9075f5071ec491c72e2
+RMD160 (dcmtk/DCMTK-3.6.4.tar.gz) = 90b2fd2362945170c8699db27f04940183edad19
+SHA512 (dcmtk/DCMTK-3.6.4.tar.gz) = f9811b8b94c3557a6649e498c5497e4b38a20c65d77cea99bb7eb2a955c7b3663767c66d81c3445949d58ac2d406397e08e9ef6ef73297f8235dc804a4b2c17c
+Size (dcmtk/DCMTK-3.6.4.tar.gz) = 6199127 bytes
+SHA1 (patch-config_configure) = cafec94cad2f9d580269a1d1fdbd5230cca92cb1

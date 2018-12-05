@@ -1,9 +1,9 @@
 # $NetBSD$
 
 GITHUB_PROJECT=	dcmtk
-DISTNAME=	DCMTK-3.6.3
-PKGNAME=	dcmtk-3.6.3
-CATEGORIES=	graphics
+DISTNAME=	DCMTK-3.6.4
+PKGNAME=	dcmtk-3.6.4
+CATEGORIES=	biology graphics
 MASTER_SITES=	-https://github.com/DCMTK/dcmtk/archive/${DISTNAME}${EXTRACT_SUFX}
 DIST_SUBDIR=	${GITHUB_PROJECT}
 
