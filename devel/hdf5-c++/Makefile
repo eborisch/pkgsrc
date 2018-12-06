@@ -18,13 +18,15 @@ do-install:
 	    ${WRKSRC}/hl/c++/src/libhdf5_hl_cpp.la ${DESTDIR}/${PREFIX}/lib/
 	${INSTALL_DATA} \
 	    ${WRKSRC}/hl/c++/src/H5PacketTable.h ${DESTDIR}/${PREFIX}/include/
-.for f in H5AbstractDs.h H5ArrayType.h H5AtomType.h H5Attribute.h H5Classes.h \
-          H5CommonFG.h H5CompType.h H5Cpp.h H5CppDoc.h H5DataSet.h \
-	  H5DataSpace.h H5DataType.h H5DcreatProp.h H5DxferProp.h H5EnumType.h \
-	  H5Exception.h H5FaccProp.h H5FcreatProp.h H5File.h H5FloatType.h \
-	  H5Group.h H5IdComponent.h H5Include.h H5IntType.h H5Library.h \
-	  H5Location.h H5OcreatProp.h \
-	  H5Object.h H5PredType.h H5PropList.h H5StrType.h H5VarLenType.h
+.for f in H5AbstractDs.h H5Alltypes.h H5ArrayType.h H5AtomType.h \
+          H5Attribute.h H5Classes.h H5CommonFG.h H5CompType.h H5Cpp.h \
+          H5CppDoc.h H5DaccProp.h H5DataSet.h H5DataSpace.h H5DataType.h \
+          H5DcreatProp.h H5DxferProp.h H5EnumType.h H5Exception.h \
+          H5FaccProp.h H5FcreatProp.h H5File.h H5FloatType.h H5Group.h \
+          H5IdComponent.h H5Include.h H5IntType.h H5LaccProp.h \
+          H5LcreatProp.h H5Library.h H5Location.h H5Object.h \
+          H5OcreatProp.h H5PredType.h H5PropList.h H5StrType.h \
+          H5VarLenType.h
 	${INSTALL_DATA} ${WRKSRC}/c++/src/${f} ${DESTDIR}/${PREFIX}/include/
 .endfor
 .for f in chunks.cpp compound.cpp create.cpp extend_ds.cpp \
