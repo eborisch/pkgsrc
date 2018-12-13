@@ -1,4 +1,4 @@
-# $NetBSD: Makefile,v 1.53 2018/12/03 13:51:52 mlelstv Exp $
+# $NetBSD: Makefile,v 1.55 2018/12/10 00:14:23 ryoon Exp $
 
 DISTNAME=	samba-${VERSION}
 PKGREVISION=	1
@@ -138,6 +138,15 @@ MAKEFLAGS+=	PWD_MKDB=${PWD_MKDB:Q}
 FILES_SUBST+=	MKTEMP=${MKTEMP:Q}
 FILES_SUBST+=	PWD_MKDB=${PWD_MKDB:Q}
 
+PLIST_VARS+=	64bit
+.if !empty(LP64PLATFORMS:@.PLAT.@${MACHINE_PLATFORM:M${.PLAT.}}@) || \
+	(defined(ABI) && ${ABI} == "64")
+CONFIGURE_ARGS+=	--with-ldb-lmdb
+PLIST.64bit=		yes
+.else
+CONFIGURE_ARGS+=	--without-ldb-lmdb
+.endif
+
 INSTALLATION_DIRS+=	${DOCDIR} ${EGDIR}
 
 DOCDIR=		share/doc/${PKGBASE}
@@ -184,7 +193,7 @@ post-install:
 	${INSTALL_DATA} ${WRKSRC}/examples/smb.conf.default \
 		${DESTDIR}${PREFIX}/${EGDIR}
 
-REPLACE_PERL=	pidl/pidl
+REPLACE_PERL+=	pidl/pidl
 REPLACE_PYTHON=	buildtools/bin/waf \
 		source4/setup/* \
 		source4/scripting/bin/* \
