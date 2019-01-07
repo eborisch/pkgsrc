@@ -1,6 +1,7 @@
-# $NetBSD: Makefile,v 1.45 2018/12/09 17:05:51 adam Exp $
+# $NetBSD: Makefile,v 1.47 2019/01/04 14:52:43 gdt Exp $
 
 DISTNAME=	nghttp2-1.35.1
+PKGREVISION=	1
 CATEGORIES=	www
 MASTER_SITES=	${MASTER_SITE_GITHUB:=tatsuhiro-t/}
 EXTRACT_SUFX=	.tar.xz
@@ -12,6 +13,8 @@ COMMENT=	Implementation of HTTP/2 in C
 LICENSE=	mit
 
 USE_LANGUAGES=		c c++14
+GCC_REQD+=		6
+
 USE_LIBTOOL=		yes
 USE_TOOLS+=		gmake pkg-config
 GNU_CONFIGURE=		yes

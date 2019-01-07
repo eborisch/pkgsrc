@@ -1,4 +1,4 @@
-# $NetBSD: Makefile,v 1.1016 2018/12/03 19:29:00 markd Exp $
+# $NetBSD: Makefile,v 1.1019 2019/01/06 01:50:25 gutteridge Exp $
 #
 
 COMMENT=	Text processing utilities (does not include desktop publishing)
@@ -355,6 +355,7 @@ SUBDIR+=	jo
 SUBDIR+=	jrep
 SUBDIR+=	json-c
 SUBDIR+=	json-glib
+SUBDIR+=	json-schema
 SUBDIR+=	json-yaml
 SUBDIR+=	jsoncpp
 SUBDIR+=	kakasi
@@ -486,6 +487,7 @@ SUBDIR+=	p5-Net-Dict
 SUBDIR+=	p5-Net-IDN-Encode
 SUBDIR+=	p5-Number-Format
 SUBDIR+=	p5-Number-Spell
+SUBDIR+=	p5-ODF-lpOD
 SUBDIR+=	p5-PDF
 SUBDIR+=	p5-PDF-API2
 SUBDIR+=	p5-PDF-Create
@@ -778,6 +780,7 @@ SUBDIR+=	py-html5lib
 SUBDIR+=	py-humanize
 SUBDIR+=	py-inflection
 SUBDIR+=	py-iniparse
+SUBDIR+=	py-isc_dhcp_leases
 SUBDIR+=	py-jade
 SUBDIR+=	py-jellyfish
 SUBDIR+=	py-jinja2

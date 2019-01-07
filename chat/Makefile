@@ -1,4 +1,4 @@
-# $NetBSD: Makefile,v 1.209 2018/11/28 15:12:27 nia Exp $
+# $NetBSD: Makefile,v 1.212 2019/01/01 09:41:20 nia Exp $
 #
 
 COMMENT=	Communication programs
@@ -83,6 +83,7 @@ SUBDIR+=	lurch-purple
 SUBDIR+=	matterircd
 SUBDIR+=	mcabber
 SUBDIR+=	meanwhile
+SUBDIR+=	mumble
 SUBDIR+=	ninja
 SUBDIR+=	p5-IRC-Utils
 SUBDIR+=	p5-Net-AIM
@@ -146,13 +147,10 @@ SUBDIR+=	unrealircd
 SUBDIR+=	vicq
 SUBDIR+=	weechat
 SUBDIR+=	xaric
-SUBDIR+=	xchat
-SUBDIR+=	xchat-perl
-SUBDIR+=	xchat-python
-SUBDIR+=	xchat-systray-integration
 SUBDIR+=	ysm
 SUBDIR+=	zenicb
 SUBDIR+=	zenirc
 SUBDIR+=	zircon
+SUBDIR+=	znc
 
 .include "../mk/misc/category.mk"

@@ -1,6 +1,6 @@
-# $NetBSD: Makefile,v 1.177 2018/12/11 10:37:20 wiz Exp $
+# $NetBSD: Makefile,v 1.179 2019/01/05 12:43:46 triaxx Exp $
 
-DISTNAME=		mpd-0.21.3
+DISTNAME=		mpd-0.21.4
 PKGNAME=		${DISTNAME:S/mpd/musicpd/}
 CATEGORIES=		audio
 MASTER_SITES=		http://www.musicpd.org/download/mpd/0.21/
@@ -21,7 +21,7 @@ USE_LANGUAGES=		c c++
 MESON_ARGS+=		-Ddocumentation=true
 
 # c++14
-GCC_REQD+=		4.9
+GCC_REQD+=		6
 
 CPPFLAGS.SunOS+=	-std=gnu99 -D_XOPEN_SOURCE=600 -D__EXTENSIONS__
 

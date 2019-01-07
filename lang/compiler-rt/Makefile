@@ -1,6 +1,6 @@
-# $NetBSD: Makefile,v 1.5 2018/12/09 20:04:40 adam Exp $
+# $NetBSD: Makefile,v 1.7 2018/12/23 00:11:39 adam Exp $
 
-DISTNAME=	compiler-rt-7.0.0.src
+DISTNAME=	compiler-rt-7.0.1.src
 PKGNAME=	${DISTNAME:S/.src//}
 CATEGORIES=	lang devel
 MASTER_SITES=	http://llvm.org/releases/${PKGVERSION_NOREV}/
@@ -35,6 +35,13 @@ CMAKE_ARGS+=	-DLLVM_CONFIG_PATH=${LLVM_CONFIG_PATH:Q}
 CMAKE_ARGS+=	-DCOMPILER_RT_ENABLE_IOS=OFF
 
 PLIST_SUBST+=	COMPILER_RT_OS_DIR=${OS_DIR}
+PLIST_VARS+=	asan
+
+.include "../../mk/bsd.prefs.mk"
+
+.if ${OPSYS} != "SunOS"
+PLIST.asan=	yes
+.endif
 
 TEST_TARGET=	check-compiler-rt
 
@@ -42,6 +49,11 @@ PYTHON_FOR_BUILD_ONLY=	yes
 
 post-extract:
 	${MKDIR} ${WRKDIR}/build
+
+post-install:
+	cd ${DESTDIR}${PREFIX} && \
+	${FIND} lib/clang/${PKGVERSION_NOREV} -type f -name '*.dylib' \
+		-exec install_name_tool -id ${PREFIX}/{} {} \;
 
 .include "../../devel/googletest/buildlink3.mk"
 .include "../../lang/llvm/buildlink3.mk"

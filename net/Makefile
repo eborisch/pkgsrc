@@ -1,4 +1,4 @@
-# $NetBSD: Makefile,v 1.1234 2018/12/03 02:29:20 manu Exp $
+# $NetBSD: Makefile,v 1.1236 2019/01/05 06:20:50 schmonz Exp $
 #
 
 COMMENT=	Networking tools
@@ -106,6 +106,7 @@ SUBDIR+=	dhid
 SUBDIR+=	dhisd
 SUBDIR+=	djbdns
 SUBDIR+=	djbdns-run
+SUBDIR+=	djbdnscurve6
 SUBDIR+=	dlint
 SUBDIR+=	dnscap
 SUBDIR+=	dnscheck
@@ -699,6 +700,7 @@ SUBDIR+=	py-sbws
 SUBDIR+=	py-scp
 SUBDIR+=	py-simplesoap
 SUBDIR+=	py-smb
+SUBDIR+=	py-smbc
 SUBDIR+=	py-soaplib
 SUBDIR+=	py-soappy
 SUBDIR+=	py-socketpool

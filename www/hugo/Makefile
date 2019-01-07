@@ -1,6 +1,6 @@
-# $NetBSD: Makefile,v 1.8 2018/12/12 14:26:46 ryoon Exp $
+# $NetBSD: Makefile,v 1.10 2019/01/02 19:59:32 jmmv Exp $
 
-DISTNAME=	hugo-0.52
+DISTNAME=	hugo-0.53
 PKGNAME=	go-${DISTNAME}
 MASTER_SITES=	${MASTER_SITE_GITHUB:=gohugoio/}
 CATEGORIES=	www

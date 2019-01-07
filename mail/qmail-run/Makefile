@@ -1,7 +1,7 @@
-# $NetBSD: Makefile,v 1.64 2018/12/12 01:08:30 schmonz Exp $
+# $NetBSD: Makefile,v 1.69 2019/01/07 04:29:46 schmonz Exp $
 #
 
-DISTNAME=		qmail-run-20181211.1
+DISTNAME=		qmail-run-20181230
 CATEGORIES=		mail
 MASTER_SITES=		# empty
 DISTFILES=		# empty
@@ -15,9 +15,9 @@ DEPENDS+=		greylisting-spp-[0-9]*:../../mail/greylisting-spp
 DEPENDS+=		pkg_alternatives-[0-9]*:../../pkgtools/pkg_alternatives
 DEPENDS_QMAIL=		qmail>=1.03nb42:../../mail/qmail
 DEPENDS+=		${DEPENDS_QMAIL}
-DEPENDS+=		qmail-acceptutils>=20181128:../../mail/qmail-acceptutils
+DEPENDS+=		qmail-acceptutils>=20181228:../../mail/qmail-acceptutils
 DEPENDS+=		qmail-qfilter>1.5nb1:../../mail/qmail-qfilter
-DEPENDS+=		qmail-rejectutils>=20181128:../../mail/qmail-rejectutils
+DEPENDS+=		qmail-rejectutils>=20181230:../../mail/qmail-rejectutils
 DEPENDS+=		qmail-spp-spf-[0-9]*:../../mail/qmail-spp-spf
 
 WRKSRC=			${WRKDIR}
@@ -77,11 +77,11 @@ MAKEVARS+=	PKG_SYSCONFDIR.qmail-run
 
 SUBST_CLASSES+=		paths
 SUBST_STAGE.paths=	pre-configure
-SUBST_FILES.paths=	mailer.conf
-SUBST_FILES.paths+=	greylisting-spp-with-exemptions ofmipd-with-user-cdb
+SUBST_FILES.paths=	mailer.conf README.pkgsrc
+SUBST_FILES.paths+=	greylisting-spp-wrapper ofmipd-with-user-cdb
 SUBST_FILES.paths+=	qmail-isspam-* qmail-procmail qmail-qread-client
 SUBST_FILES.paths+=	rcptchecks ofmipfilters smtpfilters smtpplugins tcprules-*
-SUBST_VARS.paths=	PKGNAME PKG_SYSCONFDIR PREFIX
+SUBST_VARS.paths=	PKGNAME PKG_SYSCONFDIR PREFIX RCD_SCRIPTS_DIR
 SUBST_VARS.paths+=	CAT ECHO GREP SED SH SORT TRUE
 
 post-extract:
@@ -93,14 +93,14 @@ post-extract:
 		tcprules-ofmip tcprules-pop3 tcprules-smtp; do \
 		${CP} ${FILESDIR}/$$f ${WRKDIR}/$$f; \
 	done; \
-	for f in greylisting-spp-with-exemptions ofmipd-with-user-cdb \
+	for f in greylisting-spp-wrapper ofmipd-with-user-cdb \
 		qmail-isspam-rspamd qmail-isspam-spamassassin \
 		qmail-procmail qmail-qread-client; do \
 		${CP} ${FILESDIR}/$$f.sh ${WRKDIR}/$$f; \
 	done
 
 do-install:
-	for f in greylisting-spp-with-exemptions ofmipd-with-user-cdb \
+	for f in greylisting-spp-wrapper ofmipd-with-user-cdb \
 		qmail-isspam-rspamd qmail-isspam-spamassassin \
 		qmail-procmail qmail-qread-client; do \
 		${INSTALL_SCRIPT} ${WRKDIR}/$$f ${DESTDIR}${PREFIX}/bin; \
