@@ -1,6 +1,6 @@
-# $NetBSD: Makefile,v 1.14 2019/01/04 08:17:37 wen Exp $
+# $NetBSD: Makefile,v 1.16 2019/01/19 07:33:55 taca Exp $
 
-DISTNAME=	drupal-8.6.5
+DISTNAME=	drupal-8.6.6
 PKGNAME=	${PHP_PKG_PREFIX}-${DISTNAME}
 CATEGORIES=	www
 MASTER_SITES=	http://ftp.drupal.org/files/projects/
@@ -65,6 +65,9 @@ INSTALLATION_DIRS+=	${DRUPAL}/${i}
 
 post-extract:
 	${CP} ${FILESDIR}/drupal.conf ${WRKSRC}
+
+pre-install:
+	${RM} ${WRKSRC}/core/lib/Drupal/Core/Extension/ModuleHandler.php.orig
 
 do-install:
 	${INSTALL_DATA} ${WRKSRC}/robots.txt ${DESTDIR}${PREFIX}/${DRUPAL}

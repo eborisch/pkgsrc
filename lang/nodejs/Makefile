@@ -1,10 +1,9 @@
-# $NetBSD: Makefile,v 1.150 2018/12/15 17:32:38 maya Exp $
+# $NetBSD: Makefile,v 1.152 2019/01/21 11:00:45 ryoon Exp $
 
-DISTNAME=	node-v10.14.2
+DISTNAME=	node-v10.15.0
 
 USE_LANGUAGES=	c gnu++14
 
-PKGREVISION=	1
 # Stated by the changelog as of 8.2.0
 GCC_REQD+=	4.9.4
 
@@ -23,6 +22,13 @@ MAKE_ENV+=	LD_LIBRARY_PATH=${PREFIX}/lib
 CONFIGURE_ARGS+=	--with-intl=system-icu
 
 CHECK_PORTABILITY_SKIP+=	deps/openssl/openssl/.travis-create-release.sh
+
+.if ${MACHINE_ARCH} == "i386"
+# 64 bit atomic ops are required
+CXXFLAGS+=	-march=i586
+# required for SSE2 code under i386.
+CXXFLAGS+=	-mstackrealign
+.endif
 
 .include "options.mk"
 

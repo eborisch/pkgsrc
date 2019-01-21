@@ -1,9 +1,9 @@
-# $NetBSD: Makefile,v 1.107 2018/12/17 19:15:33 schmonz Exp $
+# $NetBSD: Makefile,v 1.109 2019/01/17 22:49:12 schmonz Exp $
 #
 
 DISTNAME=		netqmail-1.06
 PKGNAME=		qmail-1.03
-PKGREVISION=		42
+PKGREVISION=		44
 CATEGORIES=		mail
 MASTER_SITES=		http://qmail.org/
 
@@ -168,6 +168,10 @@ MAILDIRUNIQ_PATCH=		qmail-1.03-maildir-uniq.patch
 PATCHFILES+=			${MAILDIRUNIQ_PATCH}
 SITES.${MAILDIRUNIQ_PATCH}=	http://www.memoryhole.net/qmail/
 PATCH_DIST_STRIP.${MAILDIRUNIQ_PATCH}=-p1
+PATCH_DIST_CAT.${MAILDIRUNIQ_PATCH}= \
+				${SED} -e 's|"057"|"\\\\057"|' \
+				-e 's|"072"|"\\\\072"|' \
+				< ${MAILDIRUNIQ_PATCH}
 
 QMAILPATCHES+=			outgoingip:${OUTGOINGIP_PATCH}
 OUTGOINGIP_PATCH=		outgoingip.patch

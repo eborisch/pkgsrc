@@ -1,4 +1,4 @@
-# $NetBSD: Makefile,v 1.99 2018/12/15 17:17:24 taca Exp $
+# $NetBSD: Makefile,v 1.101 2019/01/14 13:09:05 taca Exp $
 #
 
 COMMENT=	Collections of other packages
@@ -43,7 +43,6 @@ SUBDIR+=	netbsd-doc-print
 SUBDIR+=	netbsd-www
 SUBDIR+=	p5-gnome-bindings
 SUBDIR+=	php56-extensions
-SUBDIR+=	php70-extensions
 SUBDIR+=	php71-extensions
 SUBDIR+=	php72-extensions
 SUBDIR+=	php73-extensions
@@ -52,6 +51,7 @@ SUBDIR+=	pkgsrc-guide-tools
 SUBDIR+=	pulseaudio-tools
 SUBDIR+=	py-gnome-bindings
 SUBDIR+=	py-tryton-platform
+SUBDIR+=	qmail-server
 SUBDIR+=	ruby-gnome2
 SUBDIR+=	ruby-redmine-plugins
 SUBDIR+=	ruby-redmine-themes
