@@ -1,8 +1,8 @@
 # $NetBSD$
 
 PKG_OPTIONS_VAR=PKG_OPTIONS.dcmtk
-PKG_SUPPORTED_OPTIONS= cxx11 private tiff png openssl xml
-PKG_SUGGESTED_OPTIONS= tiff png openssl
+PKG_SUPPORTED_OPTIONS= cxx11 private tiff png openssl xml shared
+PKG_SUGGESTED_OPTIONS= tiff png openssl shared
 
 .include "../../mk/bsd.options.mk"
 
@@ -10,6 +10,14 @@ PKG_SUGGESTED_OPTIONS= tiff png openssl
 CMAKE_ARGS+=	-DDCMTK_ENABLE_CXX11=ON
 .else
 CMAKE_ARGS+=	-DDCMTK_ENABLE_CXX11=OFF
+.endif
+
+.if !empty(PKG_OPTIONS:Mshared)
+CMAKE_ARGS+=	-DBUILD_SHARED_LIBS=ON
+PLIST.shared=	yes
+.else
+CMAKE_ARGS+=	-DBUILD_SHARED_LIBS=OFF
+PLIST.static=	yes
 .endif
 
 .if !empty(PKG_OPTIONS:Mprivate)

@@ -4,3 +4,4 @@ SHA1 (rhash-1.3.7.tar.gz) = d5c5cea302e070ec97e99f791628a3cdf8a22baf
 RMD160 (rhash-1.3.7.tar.gz) = 86c5947627796172bcd1639a1c3d88f21b2f499b
 SHA512 (rhash-1.3.7.tar.gz) = 182f474b0f0a39f9e0adb7e34fcc5ddca6f00e75d7cf6b846da33af166257b2ed38be70aa71e6732c4e6cbdd156712790b8bc5340933b65f3ce57269835d1585
 Size (rhash-1.3.7.tar.gz) = 362981 bytes
+SHA1 (patch-librhash_byte__order.h) = a9d095e90cf700019551ccf5d56ae9ff8accbae6

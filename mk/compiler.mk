@@ -181,8 +181,9 @@ _CXX_VERSION_REQD=
 .for _version_ in gnu++14 c++14 gnu++11 c++11 gnu++0x c++0x gnu++03 c++03
 .  if empty(_CXX_VERSION_REQD) && !empty(USE_LANGUAGES:M${_version_})
 _CXX_VERSION_REQD=	${_version_}
-_WRAP_EXTRA_ARGS.CXX+=	-std=${_CXX_VERSION_REQD}
-CWRAPPERS_PREPEND.cxx+=	-std=${_CXX_VERSION_REQD}
+# Required for old gcc on this system
+_WRAP_EXTRA_ARGS.CXX+=	-std=${_CXX_VERSION_REQD:C/03/0x/1}
+CWRAPPERS_PREPEND.cxx+=	-std=${_CXX_VERSION_REQD:C/03/0x/1}
 .  endif
 .endfor
 
