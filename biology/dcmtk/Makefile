@@ -18,16 +18,17 @@ USE_LIBTOOL=	yes
 USE_TOOLS+=	pkg-config
 USE_LANGUAGES=	c c++0x
 
+USE_BUILTIN.iconv= no
+
 .include "options.mk"
 
-CMAKE_ARGS+=	-DDCMTK_WITH_ICONV=ON
 CMAKE_ARGS+=	-DDCMTK_WITH_DOXYGEN=OFF
 CMAKE_ARGS+=	-DDCMTK_WITH_SNDFILE=OFF
 CMAKE_ARGS+=	-DDCMTK_WITH_WRAP=OFF
-CMAKE_ARGS+=	-DCMTK_ENABLE_BUILTIN_DICTIONARY=ON
+CMAKE_ARGS+=	-DDCMTK_ENABLE_BUILTIN_DICTIONARY=ON
 
 PLIST_VARS+=	shared static
 
-.include "../../textproc/icu/buildlink3.mk"
+.include "../../converters/libiconv/buildlink3.mk"
 .include "../../devel/zlib/buildlink3.mk"
 .include "../../mk/bsd.pkg.mk"
