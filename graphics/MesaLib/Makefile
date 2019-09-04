@@ -184,5 +184,6 @@ post-install:
 
 .include "../../devel/meson/build.mk"
 .include "../../devel/zlib/buildlink3.mk"
+.include "../../lang/llvm/buildlink3.mk"
 .include "../../textproc/expat/buildlink3.mk"
 .include "../../mk/bsd.pkg.mk"
