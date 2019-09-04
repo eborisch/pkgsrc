@@ -1,8 +1,0 @@
-@comment $NetBSD$
-include/libomp/omp.h
-include/libomp/ompt.h
-lib/libomp/libgomp.so
-lib/libomp/libiomp5.so
-lib/libomp/libomp.so
-lib/libomp/libomptarget.rtl.x86_64.so
-lib/libomp/libomptarget.so
