@@ -14,7 +14,7 @@ USE_LANGUAGES+=	c99
 USE_TOOLS+=	cmake
 USE_CMAKE=	yes
 
-DEPENDS+=	python27>0:../../lang/python27
+DEPENDS+=      python37-[0-9]*:../../lang/python37
 
 SUBST_CLASSES+=		fix-paths
 SUBST_STAGE.fix-paths=	pre-configure

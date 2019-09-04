@@ -128,6 +128,7 @@ SUBDIR+=	avltree
 SUBDIR+=	bam
 SUBDIR+=	bats
 SUBDIR+=	bcc
+SUBDIR+=	bear
 SUBDIR+=	bfg
 SUBDIR+=	bglibs
 SUBDIR+=	bin86
