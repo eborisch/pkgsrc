@@ -28,6 +28,8 @@ USE_LANGUAGES=		c c++03
 USE_TOOLS+=		gmake makeinfo sed:run
 USE_TOOLS.NetBSD+=	gsed
 
+# Build fails on CentOS 7 with yes
+PKGSRC_USE_FORTIFY=    no
 
 GNU_CONFIGURE=		yes
 ## Build outside ${WRKSRC}
