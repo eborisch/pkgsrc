@@ -1,4 +1,4 @@
-# $NetBSD: Makefile,v 1.1265 2019/09/07 16:27:32 maya Exp $
+# $NetBSD: Makefile,v 1.1269 2019/09/15 13:00:33 nia Exp $
 #
 
 COMMENT=	Networking tools
@@ -56,7 +56,6 @@ SUBDIR+=	bridged
 SUBDIR+=	bsddip
 SUBDIR+=	btget
 SUBDIR+=	btpd
-SUBDIR+=	bug-buddy
 SUBDIR+=	bwm-ng
 SUBDIR+=	bwping
 SUBDIR+=	cacti
@@ -166,6 +165,7 @@ SUBDIR+=	freeradius-unixodbc
 SUBDIR+=	freeradius-yubikey
 SUBDIR+=	freeradius2
 SUBDIR+=	freerdp
+SUBDIR+=	freerdp2
 SUBDIR+=	fstrm
 SUBDIR+=	ftplibpp
 SUBDIR+=	ftpproxy
@@ -754,7 +754,6 @@ SUBDIR+=	rbldnsd
 SUBDIR+=	rdesktop
 SUBDIR+=	rdist6
 SUBDIR+=	remmina
-SUBDIR+=	remmina-plugins
 SUBDIR+=	restclient-ui
 SUBDIR+=	rinetd
 SUBDIR+=	rootprobe
@@ -882,7 +881,6 @@ SUBDIR+=	transmission
 SUBDIR+=	transmission-gtk
 SUBDIR+=	transmission-qt
 SUBDIR+=	trickle
-SUBDIR+=	tsclient
 SUBDIR+=	tsocks
 SUBDIR+=	tspc
 SUBDIR+=	ttt

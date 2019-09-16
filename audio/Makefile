@@ -1,4 +1,4 @@
-# $NetBSD: Makefile,v 1.562 2019/09/08 10:20:07 nia Exp $
+# $NetBSD: Makefile,v 1.564 2019/09/14 11:03:22 nia Exp $
 #
 
 COMMENT=	Audio tools
@@ -8,6 +8,7 @@ SUBDIR+=	SDL_mixer
 SUBDIR+=	SDL_sound
 SUBDIR+=	abcde
 SUBDIR+=	abcmidi
+SUBDIR+=	adplay
 SUBDIR+=	adplug
 SUBDIR+=	aeneas
 SUBDIR+=	akode
@@ -397,6 +398,7 @@ SUBDIR+=	py-last
 SUBDIR+=	py-libmtag
 SUBDIR+=	py-mad
 SUBDIR+=	py-mpd
+SUBDIR+=	py-mpd2
 SUBDIR+=	py-musicbrainz
 SUBDIR+=	py-musicbrainz-ngs
 SUBDIR+=	py-musique
