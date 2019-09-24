@@ -1,4 +1,4 @@
-# $NetBSD: Makefile,v 1.454 2019/09/12 17:10:47 ryoon Exp $
+# $NetBSD: Makefile,v 1.457 2019/09/21 15:19:17 nia Exp $
 #
 
 COMMENT=	Games
@@ -23,8 +23,8 @@ SUBDIR+=	alephone
 SUBDIR+=	amaze
 SUBDIR+=	amor
 SUBDIR+=	an
-SUBDIR+=	angband-tty
-SUBDIR+=	angband-x11
+SUBDIR+=	angband
+SUBDIR+=	angband-sdl
 SUBDIR+=	anise
 SUBDIR+=	aop
 SUBDIR+=	armagetronad
@@ -96,6 +96,7 @@ SUBDIR+=	doom2-pwad-struggle
 SUBDIR+=	doomlegacy
 SUBDIR+=	dopewars
 SUBDIR+=	duckmaze
+SUBDIR+=	dunelegacy
 SUBDIR+=	dungeon
 SUBDIR+=	easyrpg-player
 SUBDIR+=	eboard
@@ -363,6 +364,7 @@ SUBDIR+=	supertux
 SUBDIR+=	supertuxkart
 SUBDIR+=	svb
 SUBDIR+=	tads
+SUBDIR+=	taisei
 SUBDIR+=	tanked
 SUBDIR+=	teeworlds
 SUBDIR+=	teg

@@ -1,4 +1,4 @@
-# $NetBSD: Makefile,v 1.1049 2019/09/10 21:21:20 schmonz Exp $
+# $NetBSD: Makefile,v 1.1053 2019/09/19 03:06:30 jnemeth Exp $
 #
 
 COMMENT=	Text processing utilities (does not include desktop publishing)
@@ -408,6 +408,7 @@ SUBDIR+=	lowdown
 SUBDIR+=	lq-sp
 SUBDIR+=	lua-cjson
 SUBDIR+=	lua-expat
+SUBDIR+=	lua-lustache
 SUBDIR+=	lua-slnunicode
 SUBDIR+=	lua-xapian
 SUBDIR+=	lucene++
@@ -959,6 +960,7 @@ SUBDIR+=	ruby-rdiscount
 SUBDIR+=	ruby-rdtool
 SUBDIR+=	ruby-redcarpet
 SUBDIR+=	ruby-redcloth
+SUBDIR+=	ruby-review
 SUBDIR+=	ruby-rison
 SUBDIR+=	ruby-rttool
 SUBDIR+=	ruby-safe_yaml
@@ -1080,7 +1082,6 @@ SUBDIR+=	xxdiff
 SUBDIR+=	xxdiff-scripts
 SUBDIR+=	yamcha
 SUBDIR+=	yaml-cpp
-SUBDIR+=	yaml-cpp03
 SUBDIR+=	yelp-tools
 SUBDIR+=	yelp-xsl
 SUBDIR+=	yodl

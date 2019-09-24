@@ -1,4 +1,4 @@
-# $NetBSD: Makefile,v 1.847 2019/09/14 18:11:40 tsutsui Exp $
+# $NetBSD: Makefile,v 1.850 2019/09/19 09:29:15 nia Exp $
 #
 
 COMMENT=	Graphics tools and libraries
@@ -53,7 +53,6 @@ SUBDIR+=	babl
 SUBDIR+=	barcode
 SUBDIR+=	bktr2jpeg
 SUBDIR+=	blender
-SUBDIR+=	blender-doc
 SUBDIR+=	blinkenthemes
 SUBDIR+=	blinkentools
 SUBDIR+=	breeze-icons
@@ -374,7 +373,6 @@ SUBDIR+=	opendis
 SUBDIR+=	openexr
 SUBDIR+=	openimageio
 SUBDIR+=	openjpeg
-SUBDIR+=	openjpeg15
 SUBDIR+=	optipng
 SUBDIR+=	osg
 SUBDIR+=	oxygen-icons
@@ -514,6 +512,7 @@ SUBDIR+=	ruby-gd
 SUBDIR+=	ruby-gdk3
 SUBDIR+=	ruby-gdk_pixbuf2
 SUBDIR+=	ruby-gnuplot
+SUBDIR+=	ruby-image_size
 SUBDIR+=	ruby-imlib2
 SUBDIR+=	ruby-mini-magick
 SUBDIR+=	ruby-oily_png
