@@ -1,4 +1,4 @@
-@comment $NetBSD$
+@comment $NetBSD: PLIST,v 1.2 2019/10/01 14:45:29 nia Exp $
 ${PYSITELIB}/dicom.py
 ${PYSITELIB}/dicom.pyc
 ${PYSITELIB}/dicom.pyo

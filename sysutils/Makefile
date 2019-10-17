@@ -1,4 +1,4 @@
-# $NetBSD: Makefile,v 1.834 2019/09/16 10:57:31 nia Exp $
+# $NetBSD: Makefile,v 1.838 2019/10/10 12:41:40 fox Exp $
 #
 
 COMMENT=	System utilities
@@ -473,6 +473,7 @@ SUBDIR+=	pstree
 SUBDIR+=	puppet
 SUBDIR+=	pv
 SUBDIR+=	pwgen
+SUBDIR+=	py-Glances
 SUBDIR+=	py-Send2Trash
 SUBDIR+=	py-attic
 SUBDIR+=	py-augeas
@@ -649,10 +650,12 @@ SUBDIR+=	u-boot-jetson-tx1
 SUBDIR+=	u-boot-jetson-tx2
 SUBDIR+=	u-boot-lamobo-r1
 SUBDIR+=	u-boot-libretech-cc
+SUBDIR+=	u-boot-nanopi-duo2
 SUBDIR+=	u-boot-nanopi-m1
 SUBDIR+=	u-boot-nanopi-neo
 SUBDIR+=	u-boot-nanopi-neo-plus2
 SUBDIR+=	u-boot-nanopi-neo2
+SUBDIR+=	u-boot-nanopi-r1
 SUBDIR+=	u-boot-odroid-c2
 SUBDIR+=	u-boot-odroid-xu3
 SUBDIR+=	u-boot-orangepi-2

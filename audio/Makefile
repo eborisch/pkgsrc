@@ -1,4 +1,4 @@
-# $NetBSD: Makefile,v 1.565 2019/09/17 10:32:38 nia Exp $
+# $NetBSD: Makefile,v 1.572 2019/10/16 23:22:08 nia Exp $
 #
 
 COMMENT=	Audio tools
@@ -54,8 +54,7 @@ SUBDIR+=	bmp-musepack
 SUBDIR+=	bmp-pulse
 SUBDIR+=	bmp-scrobbler
 SUBDIR+=	bmpx
-SUBDIR+=	bsl
-SUBDIR+=	buzztard
+SUBDIR+=	buzztrax
 SUBDIR+=	cam
 SUBDIR+=	cantata
 SUBDIR+=	cd-discid
@@ -343,6 +342,7 @@ SUBDIR+=	mstream
 SUBDIR+=	mt-daapd
 SUBDIR+=	muse
 SUBDIR+=	musepack
+SUBDIR+=	musescore
 SUBDIR+=	musicbrainz
 SUBDIR+=	musicpd
 SUBDIR+=	nas
@@ -406,9 +406,10 @@ SUBDIR+=	py-mutagen
 SUBDIR+=	py-ogg
 SUBDIR+=	py-vorbis
 SUBDIR+=	qjackctl
+SUBDIR+=	qmmp
 SUBDIR+=	qsynth
 SUBDIR+=	qtplay
-SUBDIR+=	quodlibet2
+SUBDIR+=	quodlibet
 SUBDIR+=	rexima
 SUBDIR+=	rhythmbox
 SUBDIR+=	rio

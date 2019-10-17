@@ -1,4 +1,4 @@
-# $NetBSD: Makefile,v 1.25 2017/09/03 08:53:16 wiz Exp $
+# $NetBSD: Makefile,v 1.27 2019/10/17 11:52:49 adam Exp $
 
 PKGNAME=	${PYPKGPREFIX}-expat-${PY_DISTVERSION}
 CATEGORIES=	textproc python
@@ -8,6 +8,10 @@ HOMEPAGE=	https://www.python.org/
 COMMENT=	Python interface to expat
 
 EXTRACT_ELEMENTS=	${PYSUBDIR}/Modules/pyexpat.c
+.include "../../lang/python/extension.mk"
+.if ${_PYTHON_VERSION} != 27
+EXTRACT_ELEMENTS+=	${PYSUBDIR}/Modules/clinic/pyexpat.c.h
+.endif
 
 USE_GCC_RUNTIME=	yes
 

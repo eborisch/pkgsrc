@@ -1,6 +1,6 @@
-# $NetBSD: Makefile,v 1.206 2019/09/06 16:12:34 ryoon Exp $
+# $NetBSD: Makefile,v 1.208 2019/10/07 18:41:01 rhialto Exp $
 
-VERREL=		6.3.1
+VERREL=		6.3.2
 VERRC=		2
 VER=		${VERREL}.${VERRC}
 DISTNAME=	libreoffice-${VER}
@@ -30,7 +30,7 @@ pre-build:
 	cd ${WRKSRC} && ${BUILD_MAKE_CMD} Executable_gengal && ${TOOLS_PLATFORM.paxctl} +m instdir/program/gengal.bin
 .endif
 
-GCC_REQD+=	4.6
+GCC_REQD+=	7
 PYTHON_VERSIONS_INCOMPATIBLE=	27 37
 
 CHECK_SHLIBS_SUPPORTED=	no

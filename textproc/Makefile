@@ -1,4 +1,4 @@
-# $NetBSD: Makefile,v 1.1053 2019/09/19 03:06:30 jnemeth Exp $
+# $NetBSD: Makefile,v 1.1059 2019/10/14 13:30:20 wiz Exp $
 #
 
 COMMENT=	Text processing utilities (does not include desktop publishing)
@@ -164,7 +164,6 @@ SUBDIR+=	cwdiff
 SUBDIR+=	dadadodo
 SUBDIR+=	db2latex
 SUBDIR+=	dblatex
-SUBDIR+=	dbtoepub
 SUBDIR+=	detex
 SUBDIR+=	dict-client
 SUBDIR+=	dict-dictionaries
@@ -797,6 +796,7 @@ SUBDIR+=	py-gnosis-utils
 SUBDIR+=	py-guessit
 SUBDIR+=	py-html-sanitizer
 SUBDIR+=	py-html2text
+SUBDIR+=	py-html2text-2019.8.11
 SUBDIR+=	py-html5-parser
 SUBDIR+=	py-html5lib
 SUBDIR+=	py-humanize
@@ -877,7 +877,6 @@ SUBDIR+=	py-tablib
 SUBDIR+=	py-tabulate
 SUBDIR+=	py-text-unidecode
 SUBDIR+=	py-textile
-SUBDIR+=	py-tinycss
 SUBDIR+=	py-tinycss2
 SUBDIR+=	py-toml
 SUBDIR+=	py-ujson
@@ -940,6 +939,7 @@ SUBDIR+=	ruby-itex2MML
 SUBDIR+=	ruby-json
 SUBDIR+=	ruby-json-pure
 SUBDIR+=	ruby-kramdown
+SUBDIR+=	ruby-kramdown-parser-gfm
 SUBDIR+=	ruby-levenshtein
 SUBDIR+=	ruby-libxml
 SUBDIR+=	ruby-mab
@@ -970,6 +970,7 @@ SUBDIR+=	ruby-stringex
 SUBDIR+=	ruby-stringex1
 SUBDIR+=	ruby-syntax
 SUBDIR+=	ruby-temple
+SUBDIR+=	ruby-terminal-table
 SUBDIR+=	ruby-text
 SUBDIR+=	ruby-textpow
 SUBDIR+=	ruby-tilt
@@ -977,6 +978,7 @@ SUBDIR+=	ruby-tilt1
 SUBDIR+=	ruby-toml
 SUBDIR+=	ruby-treetop
 SUBDIR+=	ruby-ultraviolet
+SUBDIR+=	ruby-unicode-display_width
 SUBDIR+=	ruby-will-paginate
 SUBDIR+=	ruby-xapian
 SUBDIR+=	ruby-xhtmldiff

@@ -1,8 +1,7 @@
-# $NetBSD: Makefile,v 1.194 2019/09/18 14:17:05 ryoon Exp $
+# $NetBSD: Makefile,v 1.196 2019/10/07 09:28:09 prlw1 Exp $
 
-DISTNAME=		mpd-0.21.14
+DISTNAME=		mpd-0.21.15
 PKGNAME=		${DISTNAME:S/mpd/musicpd/}
-PKGREVISION=		1
 CATEGORIES=		audio
 MASTER_SITES=		https://www.musicpd.org/download/mpd/0.21/
 EXTRACT_SUFX=		.tar.xz
@@ -69,7 +68,7 @@ post-install:
 	${INSTALL_DATA} ${WRKSRC}/mpd.conf ${DESTDIR}${EGDIR}
 	${INSTALL_DATA} ${WRKSRC}/doc/mpdconf.example ${DESTDIR}${EGDIR}
 
-.include "../../devel/py-meson/build.mk"
+.include "../../devel/meson/build.mk"
 BUILDLINK_ABI_DEPENDS.flac+=	flac>=1.2
 .include "../../audio/flac/buildlink3.mk"
 .include "../../audio/libopus/buildlink3.mk"

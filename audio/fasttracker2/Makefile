@@ -1,9 +1,9 @@
-# $NetBSD: Makefile,v 1.40 2019/09/21 12:23:43 nia Exp $
+# $NetBSD: Makefile,v 1.42 2019/10/03 01:44:00 fox Exp $
 
-DISTNAME=	ft2clone-${DISTVERSION}-code
-PKGNAME=	fasttracker2-${DISTVERSION:C/b/2./}
+DISTNAME=	ft2-clone-v${PKGVERSION_NOREV}-code
+PKGNAME=	fasttracker2-${DISTVERSION}
+DISTVERSION=	1.00
 PKGREVISION=	1
-DISTVERSION=	b168
 CATEGORIES=	audio
 MASTER_SITES=	https://16-bits.org/
 EXTRACT_SUFX=	.zip
@@ -38,13 +38,13 @@ SUBST_FILTER_CMD.d2u=	${TR} -d '\r'
 
 pre-configure:
 .for s in ${ICON_SIZES}
-	cd ${WRKSRC} && icotool -w ${s} -h ${s} -x -o ${s}.png \
+	cd ${WRKSRC} && ${PREFIX}/bin/icotool -w ${s} -h ${s} -x -o ${s}.png \
 	    src/gfxdata/icon/ft2-clone.ico
 .endfor
 
 do-install:
 	${INSTALL_PROGRAM} ${WRKSRC}/release/other/ft2-clone \
-		${DESTDIR}${PREFIX}/bin
+		${DESTDIR}${PREFIX}/bin/${PKGBASE}
 	${INSTALL_DATA} ${FILESDIR}/fasttracker2.desktop \
 		${DESTDIR}${PREFIX}/share/applications
 	${INSTALL_DATA} ${FILESDIR}/fasttracker2.appdata.xml \

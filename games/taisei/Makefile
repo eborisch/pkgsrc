@@ -1,6 +1,6 @@
-# $NetBSD: Makefile,v 1.1 2019/09/21 15:19:17 nia Exp $
+# $NetBSD: Makefile,v 1.4 2019/10/07 09:28:11 prlw1 Exp $
 
-DISTNAME=	taisei-v1.3
+DISTNAME=	taisei-v1.3.1
 PKGNAME=	${DISTNAME:S/-v/-/}
 CATEGORIES=	games
 MASTER_SITES=	${MASTER_SITE_GITHUB:=taisei-project/}
@@ -18,7 +18,7 @@ MESON_ARGS+=	-Db_pch=false
 MESON_ARGS+=	-Db_lto=false
 MESON_ARGS+=	-Dstrip=false
 MESON_ARGS+=	-Ddefault_library=shared
-MESON_ARGS+=	-Dversion_fallback=${PKGVERSION}
+MESON_ARGS+=	-Dversion_fallback=${PKGVERSION_NOREV}
 MESON_ARGS+=	-Ddocs=false
 MESON_ARGS+=	-Ddeveloper=false
 MESON_ARGS+=	-Ddebug_opengl=false
@@ -36,10 +36,13 @@ SUBST_VARS.ver=		PKGVERSION
 REPLACE_PYTHON+=	scripts/thunk.py
 REPLACE_PYTHON+=	scripts/configure-file.py
 
+BUILDLINK_TRANSFORM+=	rm:-Werror=implicit-function-declaration
+
 PYTHON_FOR_BUILD_ONLY=	tool
 
-.include "../../devel/py-meson/build.mk"
+.include "../../devel/meson/build.mk"
 .include "../../archivers/libzip/buildlink3.mk"
+.include "../../audio/opusfile/buildlink3.mk"
 .include "../../audio/SDL2_mixer/buildlink3.mk"
 .include "../../devel/SDL2/buildlink3.mk"
 .include "../../graphics/freetype2/buildlink3.mk"

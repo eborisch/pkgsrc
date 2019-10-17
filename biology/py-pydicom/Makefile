@@ -1,4 +1,4 @@
-# $NetBSD: Makefile,v 1.2 2018/12/05 10:09:09 bsiegert Exp $
+# $NetBSD: Makefile,v 1.3 2019/10/01 14:45:29 nia Exp $
 
 DISTNAME=	pydicom-1.3.0
 PKGNAME=	${PYPKGPREFIX}-${DISTNAME}
