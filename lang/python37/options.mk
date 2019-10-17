@@ -10,7 +10,7 @@ PKG_SUGGESTED_OPTIONS=	x11
 PLIST_VARS+=		dtrace
 
 .if !empty(PKG_OPTIONS:Moptimized)
-CONFIGURE_ARGS+=       --enable-optimizations
+CONFIGURE_ARGS+=	--enable-optimizations
 .endif
 
 .if !empty(PKG_OPTIONS:Mdtrace)
