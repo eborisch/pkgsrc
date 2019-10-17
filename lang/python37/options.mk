@@ -1,13 +1,17 @@
 # $NetBSD: options.mk,v 1.4 2019/10/15 16:55:00 adam Exp $
 
 PKG_OPTIONS_VAR=	PKG_OPTIONS.python37
-PKG_SUPPORTED_OPTIONS=	dtrace pymalloc x11
+PKG_SUPPORTED_OPTIONS=	dtrace pymalloc x11 optimized
 PKG_SUGGESTED_OPTIONS=	x11
 
 .include "../../mk/bsd.prefs.mk"
 .include "../../mk/bsd.options.mk"
 
 PLIST_VARS+=		dtrace
+
+.if !empty(PKG_OPTIONS:Moptimized)
+CONFIGURE_ARGS+=       --enable-optimizations
+.endif
 
 .if !empty(PKG_OPTIONS:Mdtrace)
 CONFIGURE_ARGS+=	--with-dtrace
