@@ -1,4 +1,4 @@
-# $NetBSD: Makefile,v 1.838 2019/10/10 12:41:40 fox Exp $
+# $NetBSD: Makefile,v 1.840 2019/10/21 19:15:52 adam Exp $
 #
 
 COMMENT=	System utilities
@@ -60,7 +60,6 @@ SUBDIR+=	bkpupsd
 SUBDIR+=	boxbackup-client
 SUBDIR+=	boxbackup-server
 SUBDIR+=	brasero
-SUBDIR+=	brasero-nautilus
 SUBDIR+=	bsdec2-image-upload
 SUBDIR+=	bsdinstall
 SUBDIR+=	bsign
@@ -475,6 +474,7 @@ SUBDIR+=	pv
 SUBDIR+=	pwgen
 SUBDIR+=	py-Glances
 SUBDIR+=	py-Send2Trash
+SUBDIR+=	py-appnope
 SUBDIR+=	py-attic
 SUBDIR+=	py-augeas
 SUBDIR+=	py-borgbackup

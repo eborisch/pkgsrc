@@ -1,4 +1,4 @@
-# $NetBSD: Makefile,v 1.851 2019/10/03 14:42:59 nia Exp $
+# $NetBSD: Makefile,v 1.857 2019/10/28 10:43:57 kamil Exp $
 #
 
 COMMENT=	Graphics tools and libraries
@@ -98,7 +98,7 @@ SUBDIR+=	dxsamples
 SUBDIR+=	edje
 SUBDIR+=	elementary-xfce-icon-theme
 SUBDIR+=	enblend-enfuse
-SUBDIR+=	eog3
+SUBDIR+=	eog
 SUBDIR+=	eom
 SUBDIR+=	epeg
 SUBDIR+=	erlang-eimp
@@ -120,6 +120,7 @@ SUBDIR+=	exiftags
 SUBDIR+=	exiv2
 SUBDIR+=	extrema
 SUBDIR+=	f-spot
+SUBDIR+=	faba-icon-theme
 SUBDIR+=	fbm
 SUBDIR+=	feh
 SUBDIR+=	flickrnet
@@ -341,6 +342,7 @@ SUBDIR+=	libwmf
 SUBDIR+=	libxmi
 SUBDIR+=	ljpeg
 SUBDIR+=	luminance-hdr
+SUBDIR+=	luv-icon-theme
 SUBDIR+=	lxde-icon-theme
 SUBDIR+=	magicpoint
 SUBDIR+=	mandelbulber
@@ -352,6 +354,7 @@ SUBDIR+=	materia-gtk-theme
 SUBDIR+=	metacam
 SUBDIR+=	mgl
 SUBDIR+=	mng
+SUBDIR+=	moka-icon-theme
 SUBDIR+=	mpeg2codec
 SUBDIR+=	mpgtx
 SUBDIR+=	mscgen
@@ -484,7 +487,6 @@ SUBDIR+=	py-seqdiag
 SUBDIR+=	py-sk1libs
 SUBDIR+=	py-strich
 SUBDIR+=	py-uniconvertor
-SUBDIR+=	qcomicbook
 SUBDIR+=	qimageblitz
 SUBDIR+=	qiv
 SUBDIR+=	qiviewer

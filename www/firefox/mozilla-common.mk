@@ -1,4 +1,4 @@
-# $NetBSD: mozilla-common.mk,v 1.138 2019/09/11 14:19:08 ryoon Exp $
+# $NetBSD: mozilla-common.mk,v 1.141 2019/10/31 22:20:56 gutteridge Exp $
 #
 # common Makefile fragment for mozilla packages based on gecko 2.0.
 #
@@ -9,7 +9,7 @@
 # Python 2.7 and Python 3.6 or later are required simultaneously.
 PYTHON_VERSIONS_ACCEPTED=	27
 PYTHON_FOR_BUILD_ONLY=		tool
-.if !empty(PYTHON_VERSION_DEFAULT:M37) || !empty(PYTHON_VERSION_DEFAULT:M36)
+.if !empty(PYTHON_VERSION_DEFAULT:M3[6789])
 TOOL_DEPENDS+=		python${PYTHON_VERSION_DEFAULT}-[0-9]*:../../lang/python${PYTHON_VERSION_DEFAULT}
 ALL_ENV+=	PYTHON3=${LOCALBASE}/bin/python${PYTHON_VERSION_DEFAULT:S/3/3./}
 .else
@@ -23,7 +23,7 @@ USE_TOOLS+=		pkg-config perl gmake autoconf213 unzip zip
 USE_LANGUAGES+=		c99 gnu++14
 UNLIMIT_RESOURCES+=	datasize
 
-TOOL_DEPENDS+=		cbindgen>=0.8.7:../../devel/cbindgen
+TOOL_DEPENDS+=		cbindgen>=0.9.1:../../devel/cbindgen
 .if ${MACHINE_ARCH} == "sparc64"
 CONFIGURE_ARGS+=	--disable-nodejs
 .else
@@ -212,7 +212,7 @@ BUILDLINK_API_DEPENDS.libevent+=	libevent>=1.1
 BUILDLINK_API_DEPENDS.nspr+=	nspr>=4.21
 .include "../../devel/nspr/buildlink3.mk"
 .include "../../textproc/icu/buildlink3.mk"
-BUILDLINK_API_DEPENDS.nss+=	nss>=3.44.1
+BUILDLINK_API_DEPENDS.nss+=	nss>=3.46.1
 .include "../../devel/nss/buildlink3.mk"
 .include "../../devel/zlib/buildlink3.mk"
 #.include "../../mk/jpeg.buildlink3.mk"
@@ -227,7 +227,7 @@ BUILDLINK_DEPMETHOD.clang=	build
 BUILDLINK_API_DEPENDS.clang+=	clang>=6.0.1nb1
 .include "../../lang/clang/buildlink3.mk"
 BUILDLINK_DEPMETHOD.rust=	build
-BUILDLINK_API_DEPENDS.rust+=	rust>=1.34.0
+BUILDLINK_API_DEPENDS.rust+=	rust>=1.36.0
 .include "../../lang/rust/buildlink3.mk"
 # webrtc option requires internal libvpx
 #BUILDLINK_API_DEPENDS.libvpx+=	libvpx>=1.3.0

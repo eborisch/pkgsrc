@@ -1,4 +1,4 @@
-# $NetBSD: Makefile,v 1.584 2019/10/07 19:21:48 adam Exp $
+# $NetBSD: Makefile,v 1.586 2019/10/30 12:27:20 kamil Exp $
 
 COMMENT=	Databases
 
@@ -87,7 +87,6 @@ SUBDIR+=	lua-sql-sqlite3
 SUBDIR+=	lua-sqlite
 SUBDIR+=	lua-sqlite3
 SUBDIR+=	lua-tokyocabinet
-SUBDIR+=	luma
 SUBDIR+=	mariadb-connector-c
 SUBDIR+=	mariadb55-client
 SUBDIR+=	mariadb55-server
@@ -489,7 +488,6 @@ SUBDIR+=	sqlite3
 SUBDIR+=	sqlite3-docs
 SUBDIR+=	sqlite3-tcl
 SUBDIR+=	sqlitebrowser
-SUBDIR+=	sqliteman
 SUBDIR+=	sqlrelay
 SUBDIR+=	sqlrelay-freetds
 SUBDIR+=	sqlrelay-mysql

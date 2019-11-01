@@ -1,6 +1,7 @@
-# $NetBSD: Makefile,v 1.1 2019/10/16 13:34:08 nia Exp $
+# $NetBSD: Makefile,v 1.3 2019/10/20 11:10:48 nia Exp $
 
 DISTNAME=	xournalpp-1.0.15
+PKGREVISION=	1
 CATEGORIES=	editors
 MASTER_SITES=	${MASTER_SITE_GITHUB:=xournalpp/}
 GITHUB_PROJECT=	xournalpp
@@ -26,7 +27,7 @@ DEPENDS+=	tex-standalone-[0-9]*:../../print/tex-standalone
 
 .include "../../archivers/libzip/buildlink3.mk"
 .include "../../audio/libsndfile/buildlink3.mk"
-.include "../../audio/portaudio-devel/buildlink3.mk"
+.include "../../audio/portaudio/buildlink3.mk"
 .include "../../graphics/hicolor-icon-theme/buildlink3.mk"
 .include "../../lang/lua53/buildlink3.mk"
 .include "../../print/poppler-glib/buildlink3.mk"

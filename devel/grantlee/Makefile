@@ -1,4 +1,4 @@
-# $NetBSD: Makefile,v 1.9 2018/07/04 13:40:14 jperkin Exp $
+# $NetBSD: Makefile,v 1.11 2019/10/28 16:10:52 kamil Exp $
 #
 
 DISTNAME=	grantlee-0.5.1

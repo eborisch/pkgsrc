@@ -1,7 +1,8 @@
-# $NetBSD: Makefile,v 1.117 2019/10/02 12:51:43 he Exp $
+# $NetBSD: Makefile,v 1.122 2019/10/28 14:38:41 he Exp $
 
 DISTNAME=	rustc-1.38.0-src
 PKGNAME=	${DISTNAME:S/rustc/rust/:S/-src//}
+PKGREVISION=	1
 CATEGORIES=	lang
 MASTER_SITES=	http://static.rust-lang.org/dist/
 
@@ -43,8 +44,8 @@ CONFIGURE_ARGS+=	--disable-ninja
 #CONFIGURE_ARGS+=	--jemalloc-root=${BUILDLINK_PREFIX.jemalloc}/lib
 
 # Use "dist" build target for cross compile of bootstrap
-BUILD_TARGET=		dist
-#BUILD_TARGET=		build
+#BUILD_TARGET=		dist
+BUILD_TARGET=		build
 
 # The gcc-wrap / c++-wrap script takes CROSS_ROOT environment variable
 # to do a cross-build.  The wrapper script assumes dest/ and tools/
@@ -118,12 +119,13 @@ CHECK_PORTABILITY_SKIP+=	src/vendor/openssl-src/openssl/.travis-create-release.s
 # Bootstrapping on NetBSD/powerpc requires no debug-info from rustc
 # (both for amd64->powerpc built and powerpc->powerpc built bootstrap bits)
 CONFIGURE_ARGS+=	--disable-debug
-CONFIGURE_ARGS+=	--disable-debuginfo-tests
 CONFIGURE_ARGS+=	--disable-debug-assertions
-CONFIGURE_ARGS+=	--disable-debuginfo
-CONFIGURE_ARGS+=	--disable-debuginfo-lines
-CONFIGURE_ARGS+=	--disable-debuginfo-only-std
-CONFIGURE_ARGS+=	--disable-debuginfo-tools
+CONFIGURE_ARGS+=	--disable-llvm-release-debuginfo
+CONFIGURE_ARGS+=	--debuginfo-level=0
+CONFIGURE_ARGS+=	--debuginfo-level-rustc=0
+CONFIGURE_ARGS+=	--debuginfo-level-std=0
+CONFIGURE_ARGS+=	--debuginfo-level-tools=0
+CONFIGURE_ARGS+=	--debuginfo-level-tests=0
 .endif
 
 # Only build the ARM target on/for this host, due to resource constraints
@@ -207,7 +209,7 @@ DISTFILES:=		${DISTFILES} ${RUST_STAGE0} ${RUST_STD_STAGE0}
 pre-build-fix:
 .endif
 .if !empty(MACHINE_PLATFORM:MNetBSD-*-i386) || make(distinfo) || make (makesum) || make(mdi)
-RUST_STAGE0_VER=	1.37.0
+RUST_STAGE0_VER=	1.38.0
 RUST_ARCH=		i686-unknown-netbsd
 RUST_STAGE0:=		rust-${RUST_STAGE0_VER}-${RUST_ARCH}.tar.gz
 RUST_STD_STAGE0:=	rust-std-${RUST_STAGE0_VER}-${RUST_ARCH}.tar.gz
@@ -223,7 +225,7 @@ pre-build-fix:
 	${TOOLS_PLATFORM.paxctl} +am ${WRKDIR}/rust-bootstrap/bin/cargo
 .endif
 .if !empty(MACHINE_PLATFORM:MNetBSD-*-x86_64) || make(distinfo) || make (makesum) || make(mdi)
-RUST_STAGE0_VER=	1.37.0
+RUST_STAGE0_VER=	1.38.0
 RUST_ARCH=		x86_64-unknown-netbsd
 RUST_STAGE0:=		rust-${RUST_STAGE0_VER}-${RUST_ARCH}.tar.gz
 RUST_STD_STAGE0:=	rust-std-${RUST_STAGE0_VER}-${RUST_ARCH}.tar.gz
@@ -241,7 +243,7 @@ SITES.${RUST_STD_STAGE0}=	${MASTER_SITE_LOCAL:=rust/}
 pre-build-fix:
 .endif
 .if !empty(MACHINE_PLATFORM:MNetBSD-*-aarch64) || make(distinfo) || make (makesum) || make(mdi)
-RUST_STAGE0_VER=	1.37.0
+RUST_STAGE0_VER=	1.38.0
 RUST_ARCH=		aarch64-unknown-netbsd
 RUST_STAGE0:=		rust-${RUST_STAGE0_VER}-${RUST_ARCH}.tar.gz
 RUST_STD_STAGE0:=	rust-std-${RUST_STAGE0_VER}-${RUST_ARCH}.tar.gz
@@ -280,8 +282,10 @@ RUST_BOOTSTRAP_PATH?=	${WRKDIR}/rust-bootstrap
 
 .if ${OPSYS} == "SunOS"
 BUILD_DEPENDS+=		coreutils>=0:../../sysutils/coreutils
+BUILD_DEPENDS+=		gzip>=0:../../archivers/gzip
 TOOLS_CREATE+=		md5sum
 TOOLS_PATH.md5sum=	${PREFIX}/bin/gmd5sum
+TOOLS_PLATFORM.gzcat=	${PREFIX}/bin/gzip -cd
 .endif
 
 SUBST_CLASSES+=		rpath
@@ -313,6 +317,9 @@ post-extract:
 	${CP} ${WRKSRC}/vendor/backtrace-sys/.cargo-checksum.json \
 	      ${WRKSRC}/vendor/backtrace-sys/.cargo-checksum.json.orig
 	${SED} -e 's/59763fc255248b54fba5d0761d61093a73d51fa4cb400b0df1b5f339b9c2f48a/ba66d192421fd536ceddb50616c4c4aea06f4e39450eb0bc2bbbaed0b1e684c1/' ${WRKSRC}/vendor/backtrace-sys/.cargo-checksum.json.orig > ${WRKSRC}/vendor/backtrace-sys/.cargo-checksum.json
+	${CP} ${WRKSRC}/vendor/lzma-sys/.cargo-checksum.json \
+		${WRKSRC}/vendor/lzma-sys/.cargo-checksum.json.orig
+	${SED} -e 's/51a9ca7a4576822dc4fa01b31bc4bbed21817777abb304f605ef5951f68c3ed2/807c3aa4b5a62a70ba790df151e9ecf19f4bb562f2858575d690908751262db3/' ${WRKSRC}/vendor/lzma-sys/.cargo-checksum.json.orig > ${WRKSRC}/vendor/lzma-sys/.cargo-checksum.json
 .if ${OPSYS} == "NetBSD"
 	SDIR=${WRKDIR}/scripts; \
 	${MKDIR} $${SDIR}; \
@@ -364,6 +371,7 @@ USE_TOOLS+=		gtar
 # the rust build to use the gcc wrapper when building natively,
 # so that I could get a placeholder in the RPATH, because chrpath
 # cannot extend the length of the RPATH...
+ELFEDIT?=	/usr/bin/elfedit
 
 stage0-bootstrap: install
 	${RM} -rf ${BOOTSTRAP_TMPDIR}
@@ -405,23 +413,28 @@ stage0-bootstrap: install
 		${CP} `${PKG_CC} -print-file-name=$${lib}` \
 		    ${BOOTSTRAP_TMPDIR}/lib/pkgsrc/; \
 	done
-	for lib in libcrypto.so.1.0.0 libcurl.so.4 libhttp_parser.so.2 \
-		   libiconv.so.2 libidn2.so.0 libintl.so.8 liblber-2.4.so.2 \
-		   libldap-2.4.so.2 libnghttp2.so.14 libsasl2.so.3 libLLVM-8.so \
-		   libssh2.so.1 libssl.so.1.0.0 libunistring.so.2 libz.so.1; do \
+	# direct dependencies
+	for lib in libLLVM-9.so libcrypto.so.1.0.0 libcurl.so.4 \
+		   libssl.so.1.0.0 libz.so.1; do \
 		${CP} ${PREFIX}/lib/$${lib} ${BOOTSTRAP_TMPDIR}/lib/pkgsrc/; \
 	done
-	for f in ${BOOTSTRAP_TMPDIR}/bin/{cargo,rls,rustc,rustdoc}; do \
-		/usr/bin/elfedit -e 'dyn:runpath $$ORIGIN/../lib:$$ORIGIN/../lib/pkgsrc' $$f; \
+	# libcurl dependencies
+	for lib in libiconv.so.2 libidn2.so.0 libintl.so.8 liblber-2.4.so.2 \
+		   libldap-2.4.so.2 libnghttp2.so.14 libsasl2.so.3 \
+		   libssh2.so.1 libunistring.so.2; do \
+		${CP} ${PREFIX}/lib/$${lib} ${BOOTSTRAP_TMPDIR}/lib/pkgsrc/; \
+	done
+	for f in ${BOOTSTRAP_TMPDIR}/bin/{cargo*,clippy*,miri,rls,rustc,rustdoc,rustfmt}; do \
+		${ELFEDIT} -e 'dyn:runpath $$ORIGIN/../lib:$$ORIGIN/../lib/pkgsrc' $$f; \
 	done
 	for f in ${BOOTSTRAP_TMPDIR}/lib/pkgsrc/*.so*; do \
-		/usr/bin/elfedit -e 'dyn:runpath $$ORIGIN' $$f; \
+		${ELFEDIT} -e 'dyn:runpath $$ORIGIN' $$f; \
 	done
 	for f in ${BOOTSTRAP_TMPDIR}/lib/*.so*; do \
-		/usr/bin/elfedit -e 'dyn:runpath $$ORIGIN:$$ORIGIN/pkgsrc' $$f; \
+		${ELFEDIT} -e 'dyn:runpath $$ORIGIN:$$ORIGIN/pkgsrc' $$f; \
 	done
 	for f in ${BOOTSTRAP_TMPDIR}/lib/rustlib/${RUST_ARCH}/*/*.so*; do \
-		/usr/bin/elfedit -e 'dyn:runpath $$ORIGIN:$$ORIGIN/../../..:$$ORIGIN/../../../pkgsrc' $$f; \
+		${ELFEDIT} -e 'dyn:runpath $$ORIGIN:$$ORIGIN/../../..:$$ORIGIN/../../../pkgsrc' $$f; \
 	done
 	(cd ${WRKDIR}; \
 	 ${GTAR} -zcf ${PKGNAME_NOREV}-${RUST_ARCH}.tar.gz ${PKGNAME_NOREV}-${RUST_ARCH})

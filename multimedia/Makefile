@@ -1,11 +1,10 @@
-# $NetBSD: Makefile,v 1.282 2019/10/10 09:37:10 nia Exp $
+# $NetBSD: Makefile,v 1.289 2019/10/25 13:39:10 kamil Exp $
 #
 
 COMMENT=	Multimedia utilities
 
 SUBDIR+=	acidrip
 SUBDIR+=	adobe-flash-player
-SUBDIR+=	adobe-flash-plugin11
 SUBDIR+=	alevt
 SUBDIR+=	audiocd-kio
 SUBDIR+=	avidemux
@@ -27,7 +26,6 @@ SUBDIR+=	dvdbackup
 SUBDIR+=	dvdrip
 SUBDIR+=	dvdstyler
 SUBDIR+=	dvdview
-SUBDIR+=	farsight2
 SUBDIR+=	ffmpeg010
 SUBDIR+=	ffmpeg1
 SUBDIR+=	ffmpeg2
@@ -93,6 +91,7 @@ SUBDIR+=	gst-plugins1-x264
 SUBDIR+=	gst123
 SUBDIR+=	gstreamer0.10
 SUBDIR+=	gstreamer1
+SUBDIR+=	gstreamermm1
 SUBDIR+=	gtranscode
 SUBDIR+=	gxine
 SUBDIR+=	handbrake
@@ -100,7 +99,6 @@ SUBDIR+=	harvid
 SUBDIR+=	hwdecode-demos
 SUBDIR+=	intel-vaapi-driver
 SUBDIR+=	juk
-SUBDIR+=	kaffeine
 SUBDIR+=	kdenlive
 SUBDIR+=	kmix
 SUBDIR+=	kmplayer
@@ -128,6 +126,7 @@ SUBDIR+=	libkate
 SUBDIR+=	libkcddb
 SUBDIR+=	libkcompactdisc
 SUBDIR+=	libmatroska
+SUBDIR+=	libmediaart
 SUBDIR+=	libmediainfo
 SUBDIR+=	libmp4v2
 SUBDIR+=	libmpeg2
@@ -202,9 +201,6 @@ SUBDIR+=	smpeg2
 SUBDIR+=	ssr
 SUBDIR+=	streamlink
 SUBDIR+=	subtitleeditor
-SUBDIR+=	swfdec
-SUBDIR+=	swfdec-gnome
-SUBDIR+=	swfdec-mozilla
 SUBDIR+=	totem
 SUBDIR+=	totem-browser-plugin
 SUBDIR+=	totem-nautilus
@@ -214,7 +210,6 @@ SUBDIR+=	tstools
 SUBDIR+=	tvtime
 SUBDIR+=	ushare
 SUBDIR+=	vlc
-SUBDIR+=	vlc2
 SUBDIR+=	win32-codecs
 SUBDIR+=	x264-devel
 SUBDIR+=	x265

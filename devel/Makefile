@@ -1,4 +1,4 @@
-# $NetBSD: Makefile,v 1.2928 2019/10/16 21:30:59 wiz Exp $
+# $NetBSD: Makefile,v 1.2937 2019/10/30 12:54:46 kamil Exp $
 #
 
 COMMENT=	Development utilities
@@ -77,7 +77,7 @@ SUBDIR+=	SDLmm
 SUBDIR+=	SOPE
 SUBDIR+=	SOPE4
 SUBDIR+=	ZenTest
-SUBDIR+=	accerciser3
+SUBDIR+=	accerciser
 SUBDIR+=	acme
 SUBDIR+=	acr
 SUBDIR+=	acunia-jam
@@ -148,6 +148,7 @@ SUBDIR+=	boost-jam
 SUBDIR+=	boost-libs
 SUBDIR+=	boost-mpi
 SUBDIR+=	bpython
+SUBDIR+=	breezy
 SUBDIR+=	buddy
 SUBDIR+=	bugzilla
 SUBDIR+=	bugzilla3
@@ -285,7 +286,6 @@ SUBDIR+=	emacs-ilisp
 SUBDIR+=	emacs20-elib
 SUBDIR+=	empty
 SUBDIR+=	epydoc
-SUBDIR+=	eric4
 SUBDIR+=	erlang-base64url
 SUBDIR+=	erlang-cache_tab
 SUBDIR+=	erlang-ezlib
@@ -2168,7 +2168,6 @@ SUBDIR+=	py-hglib
 SUBDIR+=	py-hglist
 SUBDIR+=	py-hgnested
 SUBDIR+=	py-hgtools
-SUBDIR+=	py-hgview
 SUBDIR+=	py-hyperscan
 SUBDIR+=	py-hypothesis
 SUBDIR+=	py-idle
@@ -2268,7 +2267,6 @@ SUBDIR+=	py-pydispatcher
 SUBDIR+=	py-pyelftools
 SUBDIR+=	py-pygit2
 SUBDIR+=	py-pylint
-SUBDIR+=	py-pylint-common
 SUBDIR+=	py-pylint-plugin-utils
 SUBDIR+=	py-pyobjc
 SUBDIR+=	py-pyobjc-core
@@ -2430,6 +2428,7 @@ SUBDIR+=	py-test-virtualenv
 SUBDIR+=	py-test-watch
 SUBDIR+=	py-test-xdist
 SUBDIR+=	py-test-xprocess
+SUBDIR+=	py-test5
 SUBDIR+=	py-testpath
 SUBDIR+=	py-testrepository
 SUBDIR+=	py-testresources

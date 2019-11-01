@@ -1,5 +1,5 @@
 #!/bin/sh
-# $NetBSD: R2pkg.sh,v 1.9 2019/10/13 15:35:48 rillig Exp $
+# $NetBSD: R2pkg.sh,v 1.13 2019/10/19 18:47:59 rillig Exp $
 #
 # Copyright (c) 2014,2015,2016,2017,2018,2019
 #	Brook Milligan.  All rights reserved.
@@ -34,150 +34,117 @@
 
 set -u
 
-NAME="R2pkg"
-VERS="@VERS@"
+name="R2pkg"
+vers="@VERS@"
 
-R2PKG=${0}
+r2pkg=$0
 
-USAGE="${NAME} [-cDehqruVv] [-E editor] [-M maintainer] [package] -- create an R package for pkgsrc"
+usage="$name [-cDehqruVv] [-E editor] [-M maintainer] [package] -- create an R package for pkgsrc"
 
-: ${CRAN_URL:=ftp://cran.r-project.org}
-: ${PKGEDITOR:=${EDITOR:=vi}}
-: ${TMPDIR:=/tmp}
+: "${CRAN_URL:=ftp://cran.r-project.org}"
+: "${PKGEDITOR:=${EDITOR:=vi}}"
+: "${TMPDIR:=/tmp}"
 
 # Substituted by pkgsrc at pre-configure time.
-MAKE=@MAKE@
-EDIT=1
-LEVEL=0
-MAINTAINER_EMAIL=pkgsrc-users@NetBSD.org
-PID=$$
-QUIET=false
-RECURSIVE=false
-UPDATE=false
-VERBOSE=0
+make=@MAKE@
+level=0
+maintainer_email="pkgsrc-users@NetBSD.org"
+pid=$$
+quiet=false
+recursive=false
+update=false
+use_editor=yes
+verbose=0
 
-DESCRIPTION=no
-DESCRIPTION_CONNECTION=connection
+keep_description=no
 
-ARGS=""
-while getopts cDehqruVvE:M:L:P: f
+args=""
+while getopts cDehqruVvE:M:L:P: arg
 do
-    case ${f} in
+    case $arg in
 	# options without arguments
-	c) UPDATE=false; ARGS="${ARGS} -c";;
-	D) DESCRIPTION=yes; DESCRIPTION_CONNECTION="'DESCRIPTION'"; ARGS="${ARGS} -D";;
-	e) EDIT=0; ARGS="${ARGS} -e";;
-	h) echo "${USAGE}"; exit 0;;
-	q) QUIET=true; ARGS="${ARGS} -q";;
-	r) RECURSIVE=true; ARGS="${ARGS} -r";;
-	u) UPDATE=true; ARGS="${ARGS} -u";;
-	V) echo "${NAME} v${VERS}"; exit 0;;
-	v) VERBOSE=$((${VERBOSE}+1)); ARGS="${ARGS} -v";;
+	c) args="$args $arg"; update=false;;
+	D) args="$args $arg"; keep_description=yes;;
+	e) args="$args $arg"; use_editor=no;;
+	h) echo "$usage"; exit 0;;
+	q) args="$args $arg"; quiet=true;;
+	r) args="$args $arg"; recursive=true;;
+	u) args="$args $arg"; update=true;;
+	V) echo "$name v$vers"; exit 0;;
+	v) args="$args $arg"; verbose=$((verbose + 1));;
 	# options taking arguments
-	E) PKGEDITOR=${OPTARG}; ARGS="${ARGS} -E ${PKGEDITOR}";;
-	M) MAINTAINER_EMAIL=${OPTARG}; ARGS="${ARGS} -M ${MAINTAINER_EMAIL}";;
+	E) args="$args $arg $OPTARG"; PKGEDITOR=$OPTARG;;
+	M) args="$args $arg $OPTARG"; maintainer_email=$OPTARG;;
 	# options for recursion; only for internal use
-	L) LEVEL=${OPTARG};;
-	P) PID=${OPTARG};;
+	L) level=$((OPTARG + 0));;
+	P) pid=$((OPTARG + 0));;
 	# unknown options
-        \?) echo "${USAGE}" 1>&2; exit 1;;
+	\?) echo "$usage" 1>&2; exit 1;;
     esac
 done
-shift `expr ${OPTIND} - 1`
+shift $((OPTIND - 1))
 
-# Update ${ARGS} for recursive call
-ARGS="${ARGS} -L $((${LEVEL}+1)) -P ${PID}"
+# Update $args for recursive call
+args="$args -L $((level + 1)) -P $pid"
 
 if [ ${#} -eq 0 ]; then
-    RPKG=$(basename $(pwd) | sed -e 's/^R-//')
+    rpkg=$(basename "$(pwd)" | sed -e 's/^R-//')
 elif [ ${#} -eq 1 ]; then
-    RPKG=${1}
+    rpkg=$1
 else
     echo "Error: multiple package names given." 1>&2
-    echo "${USAGE}" 1>&2
+    echo "$usage" 1>&2
     exit 1
 fi
 
-R_FILE=${TMPDIR}/R2pkg.$$.R
-
-if [ ${UPDATE} = true -a -r Makefile ]; then
-    BANNER_MSG="[ ${LEVEL} ] ===> Updating R package R-${RPKG} in $(pwd)"
+if [ $update = true ] && [ -r Makefile ]; then
+    banner_msg="[ $level ] ===> Updating R package R-$rpkg in $(pwd)"
 else
-    BANNER_MSG="[ ${LEVEL} ] ===> Creating R package R-${RPKG} in $(pwd)"
+    banner_msg="[ $level ] ===> Creating R package R-$rpkg in $(pwd)"
 fi
 
-PACKAGES_LIST=${TMPDIR}/R2pkg.packages.${PID}
-DEPENDENCY_LIST=${TMPDIR}/R2pkg.depends.${PID}
+packages_list=$TMPDIR/R2pkg.packages.$pid
+dependency_list=$TMPDIR/R2pkg.depends.$pid
 
-if [ ${QUIET} = true ]; then
-    STDOUT_MAKESUM=">/dev/null"
-    STDOUT_EXTRACT=">/dev/null"
-    QUIET_CURL="TRUE"
-    ECHO_BANNER=":"
-    ECHO_DONE=":"
-    ECHO_FETCH=":"
-    ECHO_EXTRACT=":"
-    if [ ${LEVEL} -ne 0 ]; then
-	ECHO=":"
-    fi
-elif [ ${VERBOSE} -eq 0 ]; then
-    STDOUT_MAKESUM=">/dev/null"
-    STDOUT_EXTRACT=">/dev/null"
-    QUIET_CURL="TRUE"
-    ECHO_BANNER="echo"
-    ECHO_DONE=":"
-    ECHO_FETCH=":"
-    ECHO_EXTRACT="echo"
-elif [ ${VERBOSE} -eq 1 ]; then
-    STDOUT_MAKESUM=">/dev/null"
-    STDOUT_EXTRACT=">/dev/null"
-    QUIET_CURL="TRUE"
-    ECHO_BANNER="echo"
-    ECHO_DONE="echo"
-    ECHO_FETCH="echo"
-    ECHO_EXTRACT="echo"
-else
-    STDOUT_MAKESUM=""
-    STDOUT_EXTRACT=""
-    QUIET_CURL="FALSE"
-    ECHO_BANNER="echo"
-    ECHO_DONE="echo"
-    ECHO_FETCH="echo"
-    ECHO_EXTRACT="echo"
+echo_verbose0() { echo "$@"; }
+echo_verbose1() { :; }
+show_verbose2() { "$@" >/dev/null; }
+quiet_curl="TRUE"
+if [ $quiet = true ]; then
+    echo_verbose0() { :; }
+elif [ $verbose -eq 1 ]; then
+    echo_verbose1() { echo "$@"; }
+elif [ $verbose -gt 1 ]; then
+    echo_verbose1() { echo "$@"; }
+    show_verbose2() { "$@"; }
+    quiet_curl="FALSE"
 fi
 
-CRAN_PACKAGES=pub/R/web/packages
-RPKG_DESCRIPTION_URL=${CRAN_URL}/${CRAN_PACKAGES}/${RPKG}/DESCRIPTION
+rpkg_description_url=$CRAN_URL/pub/R/web/packages/$rpkg/DESCRIPTION
+
+exists ()
+{
+    case "$#,$*" in (1,*\**) return 1;; esac
+    return 0
+}
 
 check_for_R ()
 {
-    R_CMD="Rscript --no-save /dev/null"
-    eval ${R_CMD}
-    if [ ${?} -ne 0 ]; then
-	echo "ERROR: math/R package is not installed." 1>&2
-	exit 1
-    fi
+    Rscript --no-save /dev/null && return
+    echo "ERROR: math/R package is not installed." 1>&2
+    exit 1
 }
 
 check_for_no_recursion ()
 {
-    touch ${PACKAGES_LIST}
-    grep -E -q -e "${RPKG}" ${PACKAGES_LIST} \
+    touch "$packages_list"
+    grep -E -q -e "$rpkg" "$packages_list" \
 	&& echo "ERROR: circular dependency" 1>&2
-    echo "${RPKG}" >> ${PACKAGES_LIST}
+    echo "$rpkg" >> "$packages_list"
 }
 
 preserve_original_content ()
 {
-    [ -f Makefile ] && grep -e "CATEGORIES=" Makefile > CATEGORIES
-    [ -f Makefile ] && grep -e "COMMENT=" Makefile > COMMENT
-    [ -f Makefile ] && grep -e "LICENSE=" Makefile > LICENSE
-    [ -f Makefile ] && grep -e "MAINTAINER=" Makefile > MAINTAINER
-    [ -f Makefile ] && grep -e "USE_LANGUAGES" Makefile > USE_LANGUAGES
-    [ -f Makefile ] && grep -e "USE_TOOLS" Makefile > USE_TOOLS
-    [ -f Makefile ] && grep -e "DEPENDS" Makefile > DEPENDS
-    [ -f Makefile ] && grep -e "buildlink3.mk" Makefile > BUILDLINK3.MK
-
     [ -f DESCR ]    && mv DESCR DESCR.orig
     [ -f Makefile ] && mv Makefile Makefile.orig
     [ -f buildlink3.mk ] && mv buildlink3.mk buildlink3.mk.orig
@@ -186,70 +153,63 @@ preserve_original_content ()
 
 make_package ()
 {
-    env LEVEL="${LEVEL}" RPKG="${RPKG}" PACKAGES_LIST="${PACKAGES_LIST}" \
-	R2PKG="${R2PKG}" ARGS="${ARGS}" RECURSIVE="${RECURSIVE}" \
-	UPDATE="${UPDATE}" DEPENDENCY_LIST="${DEPENDENCY_LIST}" \
-	MAINTAINER_EMAIL="${MAINTAINER_EMAIL}" \
-	RPKG_DESCRIPTION_URL="${RPKG_DESCRIPTION_URL}" \
-	QUIET_CURL="${QUIET_CURL}" \
+    env LEVEL="$level" rpkg="$rpkg" PACKAGES_LIST="$packages_list" \
+	R2PKG="$r2pkg" ARGS="$args" RECURSIVE="$recursive" \
+	UPDATE="$update" DEPENDENCY_LIST="$dependency_list" \
+	MAINTAINER_EMAIL="$maintainer_email" \
+	RPKG_DESCRIPTION_URL="$rpkg_description_url" \
+	QUIET_CURL="$quiet_curl" \
 	LC_ALL="C" \
 	Rscript --no-save -e "source('@LIBDIR@/R2pkg.R'); main()"
     retval=${?}
-    if [ ${retval} -ne 0 ]; then
-	echo "ERROR: making ${RPKG} package failed." 1>&2
+    if [ $retval -ne 0 ]; then
+	echo "ERROR: making $rpkg package failed." 1>&2
     fi
-    return ${retval}
+    return $retval
 }
 
 edit_Makefile ()
 {
-    if [ ${EDIT} -ne 0 -a -s Makefile ]; then
-	${PKGEDITOR} Makefile
+    if [ $use_editor = yes ] && [ -s Makefile ]; then
+	$PKGEDITOR Makefile
     fi
 }
 
 edit_DESCR ()
 {
-    if [ ${EDIT} -ne 0 -a -s DESCR ]; then
-	${PKGEDITOR} DESCR
+    if [ $use_editor = yes ] && [ -s DESCR ]; then
+	$PKGEDITOR DESCR
     fi
 }
 
 create_distinfo ()
 {
-    ${ECHO_FETCH} "==> Fetching R-${RPKG} ..."
-    MAKE_CMD="${MAKE} makesum ${STDOUT_MAKESUM}"
-    eval ${MAKE_CMD}
-    error=${?}
-    if [ ${error} -eq 0 ]; then
-	MAKE_CMD="${MAKE} makepatchsum ${STDOUT_MAKESUM}"
-	eval ${MAKE_CMD}
-	error=${?}
-    fi
-    return ${error}
+    echo_verbose1 "==> Fetching R-$rpkg ..."
+    show_verbose2 "$make" "makesum" || return $?
+    show_verbose2 "$make" "makepatchsum" || return $?
+    return 0
 }
 
 create_buildlink3_mk ()
 {
     if [ -f buildlink3.mk.orig ]; then
-	PKGVERSION=$(${MAKE} show-var VARNAME=PKGVERSION)
-	sed -E -e "/BUILDLINK_API_DEPENDS\./s/[[:digit:].]+$/${PKGVERSION}/" \
+	PKGVERSION=$($make show-var VARNAME=PKGVERSION)
+	sed -E -e "/BUILDLINK_API_DEPENDS\./s/[[:digit:].]+$/$PKGVERSION/" \
 	    buildlink3.mk.orig > buildlink3.mk
     fi
 }
 
 extract ()
 {
-    ${ECHO_EXTRACT} "[ ${LEVEL} ] Extracting R-${RPKG} ..."
-    MAKE_CMD="env SKIP_DEPENDS=yes ${MAKE} clean extract ${STDOUT_EXTRACT}"
-    eval ${MAKE_CMD}
+    echo_verbose0 "[ $level ] Extracting R-$rpkg ..."
+    show_verbose2 env SKIP_DEPENDS=yes "$make" clean extract
 }
 
 check_license ()
 {
     rm -f LICENSE
     # echo '===> LICENSE files:'
-    if [ -f work/*/LICENSE ]; then
+    if exists work/*/LICENSE; then
 	grep -v "^YEAR: " work/*/LICENSE \
 	    | grep -v "^COPYRIGHT HOLDER: " \
 	    | grep -v "^ORGANIZATION: " \
@@ -257,32 +217,28 @@ check_license ()
 	if [ -s LICENSE ]; then
 	    # ninka -d LICENSE
 	    cp work/*/LICENSE .
-	    /bin/echo -n "[ ${LEVEL} ] Current license: "
+	    printf '%s' "[ $level ] Current license: "
 	    grep LICENSE Makefile
-	    echo "[ ${LEVEL} ] Please check it against the following:"
+	    echo "[ $level ] Please check it against the following:"
 	    cat LICENSE
 	else
 	    rm LICENSE
-	    sed -E -e 's/[[:blank:]]+#[[:blank:]]+\+ file LICENSE[[:blank:]]+.*$//' Makefile > Makefile.$$ \
-		&& mv Makefile.$$ Makefile
-	    grep -q "file LICENSE" Makefile && echo "[ ${LEVEL} ] 'file LICENSE' in Makefile but no relevant license information"
+	    sed -E -e 's/[[:blank:]]+#[[:blank:]]+\+ file LICENSE[[:blank:]]+.*$//' Makefile > Makefile.$pid \
+		&& mv Makefile.$pid Makefile
+	    grep -q "file LICENSE" Makefile && echo "[ $level ] 'file LICENSE' in Makefile but no relevant license information"
 	fi
     fi
 }
 
 check_copying ()
 {
-    if [ -f work/*/COPYING ]; then
-	cp work/*/COPYING .
-    fi
-    if [ -f work/*/COPYING.lib ]; then
-	cp work/*/COPYING.lib .
-    fi
+    exists work/*/COPYING && cp work/*/COPYING .
+    exists work/*/COPYING.lib && cp work/*/COPYING.lib .
 }
 
 cleanup_DESCR ()
 {
-    if [ -f DESCR -a -f DESCR.orig ]; then
+    if [ -f DESCR ] && [ -f DESCR.orig ]; then
 	if diff --ignore-case --ignore-all-space --ignore-blank-lines DESCR.orig DESCR > /dev/null; then
 	    mv DESCR.orig DESCR
 	else
@@ -296,19 +252,17 @@ cleanup_DESCR ()
 
 cleanup_Makefile ()
 {
-    if [ -f Makefile -a -f Makefile.orig ]; then
+    if [ -f Makefile ] && [ -f Makefile.orig ]; then
 	diff --ignore-case --ignore-all-space --ignore-blank-lines Makefile.orig Makefile > /dev/null \
 	    && mv Makefile.orig Makefile
     elif [ -f Makefile.orig ]; then
 	mv Makefile.orig Makefile
-    else
-	echo "[ ${LEVEL} ] $(pwd): neither Makefile nor Makefile.orig"
     fi
 }
 
 cleanup_buildlink3 ()
 {
-    if [ buildlink3.mk -a -f buildlink3.mk.orig ]; then
+    if [ -f buildlink3.mk ] && [ -f buildlink3.mk.orig ]; then
 	diff --ignore-case --ignore-all-space --ignore-blank-lines buildlink3.mk.orig buildlink3.mk > /dev/null \
 	    && mv buildlink3.mk.orig buildlink3.mk
     elif [ -f buildlink3.mk.orig ]; then
@@ -318,12 +272,12 @@ cleanup_buildlink3 ()
 
 cleanup_distinfo ()
 {
-    if [ -f distinfo -a -f distinfo.orig ]; then
-	tail +2 distinfo.orig > ${TMPDIR}/distinfo.orig.${PID}
-	tail +2 distinfo > ${TMPDIR}/distinfo.${PID}
-	cmp -s ${TMPDIR}/distinfo.orig.${PID} ${TMPDIR}/distinfo.${PID} \
+    if [ -f distinfo ] && [ -f distinfo.orig ]; then
+	tail +2 distinfo.orig > $TMPDIR/distinfo.orig.$pid
+	tail +2 distinfo > $TMPDIR/distinfo.$pid
+	cmp -s $TMPDIR/distinfo.orig.$pid $TMPDIR/distinfo.$pid \
 	    && mv distinfo.orig distinfo
-	rm -f ${TMPDIR}/distinfo.orig.${PID} ${TMPDIR}/distinfo.${PID}
+	rm -f $TMPDIR/distinfo.orig.$pid $TMPDIR/distinfo.$pid
     elif [ -f distinfo.orig ]; then
 	mv distinfo.orig distinfo
     fi
@@ -331,17 +285,9 @@ cleanup_distinfo ()
 
 cleanup_misc_files ()
 {
-    [ "${DESCRIPTION}" = "yes" ] || rm -f DESCRIPTION
-    rm -f ${R_FILE}
-    rm -f CATEGORIES
-    rm -f COMMENT
-    rm -f MAINTAINER
-    rm -f USE_LANGUAGES
-    rm -f USE_TOOLS
-    rm -f DEPENDS
-    rm -f BUILDLINK3.MK
-    [ ${LEVEL} -eq 0 ] && rm -f ${PACKAGES_LIST}
-    [ ${LEVEL} -eq 0 ] && rm -f ${DEPENDENCY_LIST}
+    [ "$keep_description" = "yes" ] || rm -f DESCRIPTION
+    [ $level -eq 0 ] && rm -f "$packages_list"
+    [ $level -eq 0 ] && rm -f "$dependency_list"
 }
 
 cleanup ()
@@ -355,7 +301,7 @@ cleanup ()
 
 messages ()
 {
-    if [ ${QUIET} = false -a ${LEVEL} -eq 0 ]; then
+    if [ $quiet = false ] && [ $level -eq 0 ]; then
 	cat << EOF
 
 Please do not forget the following:
@@ -367,8 +313,8 @@ Please do not forget the following:
 EOF
 	[ -f buildlink3.mk ] && echo "- check buildlink3.mk"
 
-	[ "${DESCRIPTION}" = "yes" ] && echo "- remove DESCRIPTION."
-	if [ ${RECURSIVE} = true ]; then
+	[ "$keep_description" = "yes" ] && echo "- remove DESCRIPTION."
+	if [ $recursive = true ]; then
 	    cat << EOF
 
 Recursive packages may have been created in ../../wip; please do the following:
@@ -378,8 +324,8 @@ Recursive packages may have been created in ../../wip; please do the following:
   o fix the category of any dependencies.
   o remove any extraneous dependencies.
 EOF
-	    if [ -s ${DEPENDENCY_LIST} ]; then
-		tsort ${DEPENDENCY_LIST} > depends
+	    if [ -s "$dependency_list" ]; then
+		tsort "$dependency_list" > depends
 		echo "- It may be useful to test these packages in the following order:"
 		awk 'BEGIN{printf(" ")} {printf(" R-%s",$0)}' depends && echo
 	    fi
@@ -387,17 +333,17 @@ EOF
     fi
 }
 
-${ECHO_BANNER} "${BANNER_MSG} ..."
+echo_verbose0 "$banner_msg ..."
 check_for_R
 check_for_no_recursion
 preserve_original_content
 make_package
 error=${?}
-if [ ${error} -eq 0 ]; then
+if [ $error -eq 0 ]; then
     edit_Makefile
-    error=${?}; [ ${error} -eq 0 ] || exit ${error}
+    error=${?}; [ $error -eq 0 ] || exit $error
     edit_DESCR
-    error=${?}; [ ${error} -eq 0 ] || exit ${error}
+    error=${?}; [ $error -eq 0 ] || exit $error
     create_distinfo
     create_buildlink3_mk
     extract
@@ -406,9 +352,9 @@ if [ ${error} -eq 0 ]; then
 fi
 messages
 cleanup
-if [ ${error} -eq 0 ]; then
-    ${ECHO_DONE} "${BANNER_MSG}: completed successfully"
+if [ $error -eq 0 ]; then
+    echo_verbose1 "$banner_msg: completed successfully"
 else
-    ${ECHO_DONE} "${BANNER_MSG}: FAILED"
+    echo_verbose1 "$banner_msg: FAILED"
 fi
-exit ${error}
+exit $error

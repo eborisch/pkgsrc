@@ -1,12 +1,14 @@
-# $NetBSD: Makefile,v 1.14 2019/07/21 22:25:35 wiz Exp $
+# $NetBSD: Makefile,v 1.17 2019/10/28 20:02:29 gdt Exp $
 
+# This package is "unison-2.51.x" because 2.51 is the standard
+# approach, and hence uses the bare name.
 DISTNAME=	unison-2.51.2
-PKGREVISION=	13
+PKGREVISION=	14
 CATEGORIES=	net
 MASTER_SITES=	${MASTER_SITE_GITHUB:=bcpierce00/}
 GITHUB_TAG=	v${PKGVERSION_NOREV}
 
-MAINTAINER=	tonio@NetBSD.org
+MAINTAINER=	gdt@NetBSD.org
 HOMEPAGE=	http://www.cis.upenn.edu/~bcpierce/unison/
 COMMENT=	File-synchronization tool
 LICENSE=	gnu-gpl-v3
@@ -14,13 +16,6 @@ LICENSE=	gnu-gpl-v3
 # File "/data/scratch/net/unison/work/src/fswatch.mli", line 18, characters 17-29:
 # Error: Unbound module Prefs
 #MAKE_JOBS_SAFE=	no
-
-.if (${MACHINE_ARCH} == "arm")
-BUILDLINK_ABI_DEPENDS.ocaml+=	ocaml>=3.12.0nb2
-.else
-BUILDLINK_ABI_DEPENDS.ocaml+=	ocaml>=3.11.2
-.endif
-BUILDLINK_API_DEPENDS.ocaml-lablgtk+= ocaml-lablgtk>=2.16.0
 
 # docs: unison-manual.pdf/html/ps/dvi
 #WRKSRC=		${WRKDIR}/src
@@ -48,16 +43,17 @@ MAKE_FLAGS+=	THREADS=true
 BUILD_TARGET=	buildexecutable
 
 INSTALLATION_DIRS=	bin
-INSTALLATION_DIRS+=	share/doc/unison
+INSTALLATION_DIRS+=	share/doc/unison-2.51
 
 post-install:
-	${INSTALL_MAN} ${WRKSRC}/src/BUGS.txt ${DESTDIR}${PREFIX}/share/doc/unison
-	${INSTALL_MAN} ${WRKSRC}/src/CONTRIB ${DESTDIR}${PREFIX}/share/doc/unison
-	${INSTALL_MAN} ${WRKSRC}/src/COPYING ${DESTDIR}${PREFIX}/share/doc/unison
-	${INSTALL_MAN} ${WRKSRC}/src/NEWS ${DESTDIR}${PREFIX}/share/doc/unison
-	${INSTALL_MAN} ${WRKSRC}/src/README ${DESTDIR}${PREFIX}/share/doc/unison
-	${INSTALL_MAN} ${WRKSRC}/src/ROADMAP.txt ${DESTDIR}${PREFIX}/share/doc/unison
-	${INSTALL_MAN} ${WRKSRC}/src/TODO.txt ${DESTDIR}${PREFIX}/share/doc/unison
+	${MV} ${DESTDIR}${PREFIX}/bin/unison ${DESTDIR}${PREFIX}/bin/unison-2.51
+	${INSTALL_MAN} ${WRKSRC}/src/BUGS.txt ${DESTDIR}${PREFIX}/share/doc/unison-2.51
+	${INSTALL_MAN} ${WRKSRC}/src/CONTRIB ${DESTDIR}${PREFIX}/share/doc/unison-2.51
+	${INSTALL_MAN} ${WRKSRC}/src/COPYING ${DESTDIR}${PREFIX}/share/doc/unison-2.51
+	${INSTALL_MAN} ${WRKSRC}/src/NEWS ${DESTDIR}${PREFIX}/share/doc/unison-2.51
+	${INSTALL_MAN} ${WRKSRC}/src/README ${DESTDIR}${PREFIX}/share/doc/unison-2.51
+	${INSTALL_MAN} ${WRKSRC}/src/ROADMAP.txt ${DESTDIR}${PREFIX}/share/doc/unison-2.51
+	${INSTALL_MAN} ${WRKSRC}/src/TODO.txt ${DESTDIR}${PREFIX}/share/doc/unison-2.51
 
 .include "../../lang/ocaml/buildlink3.mk"
 .include "../../mk/bsd.pkg.mk"

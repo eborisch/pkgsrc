@@ -1,4 +1,4 @@
-# $NetBSD: Makefile,v 1.712 2019/09/26 09:39:24 wiz Exp $
+# $NetBSD: Makefile,v 1.716 2019/10/29 09:17:37 nia Exp $
 #
 
 COMMENT=	Security tools
@@ -133,8 +133,6 @@ SUBDIR+=	jessie
 SUBDIR+=	john
 SUBDIR+=	kauth
 SUBDIR+=	kdesu
-SUBDIR+=	keepassx
-SUBDIR+=	keepassx0
 SUBDIR+=	keepassxc
 SUBDIR+=	keychain
 SUBDIR+=	kgpg
@@ -185,6 +183,7 @@ SUBDIR+=	libsecret
 SUBDIR+=	libsodium
 SUBDIR+=	libssh
 SUBDIR+=	libssh2
+SUBDIR+=	libstark
 SUBDIR+=	libtasn1
 SUBDIR+=	libtcpa
 SUBDIR+=	libtomcrypt
@@ -494,6 +493,7 @@ SUBDIR+=	qore-asn1-module
 SUBDIR+=	qore-ssh2-module
 SUBDIR+=	qore-xmlsec-module
 SUBDIR+=	qt4-qtkeychain
+SUBDIR+=	qt5-qtkeychain
 SUBDIR+=	racoon2
 SUBDIR+=	rainbowcrack
 SUBDIR+=	rats

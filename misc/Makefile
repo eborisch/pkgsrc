@@ -1,4 +1,4 @@
-# $NetBSD: Makefile,v 1.514 2019/09/27 07:00:52 wiz Exp $
+# $NetBSD: Makefile,v 1.517 2019/10/30 14:43:46 kamil Exp $
 #
 
 COMMENT=	Miscellaneous utilities
@@ -184,7 +184,6 @@ SUBDIR+=	mdp
 SUBDIR+=	mirmon
 SUBDIR+=	mkcue
 SUBDIR+=	mmv
-SUBDIR+=	mnemosyne
 SUBDIR+=	molden
 SUBDIR+=	moreutils
 SUBDIR+=	most
@@ -238,7 +237,6 @@ SUBDIR+=	pinfo
 SUBDIR+=	ppower
 SUBDIR+=	pty-redir
 SUBDIR+=	py-anita
-SUBDIR+=	py-anki2
 SUBDIR+=	py-ansi
 SUBDIR+=	py-asciinema
 SUBDIR+=	py-carddav
@@ -342,7 +340,6 @@ SUBDIR+=	sweeper
 SUBDIR+=	sword
 SUBDIR+=	tds
 SUBDIR+=	team
-SUBDIR+=	tellico
 SUBDIR+=	teseq
 SUBDIR+=	tmate
 SUBDIR+=	tmux
