@@ -1,4 +1,4 @@
-# $NetBSD: Makefile,v 1.465 2019/10/29 17:59:17 nia Exp $
+# $NetBSD: Makefile,v 1.467 2019/11/03 12:12:56 nia Exp $
 #
 
 COMMENT=	Games
@@ -291,6 +291,7 @@ SUBDIR+=	not_pacman
 SUBDIR+=	not_tetris
 SUBDIR+=	omega
 SUBDIR+=	onscripter
+SUBDIR+=	openjk
 SUBDIR+=	openmortal
 SUBDIR+=	openmw
 SUBDIR+=	openttd
@@ -342,6 +343,7 @@ SUBDIR+=	scummvm
 SUBDIR+=	scummvm-bass
 SUBDIR+=	scummvm-fotaq
 SUBDIR+=	scummvm-tools
+SUBDIR+=	sdlpop
 SUBDIR+=	sex
 SUBDIR+=	sienna
 SUBDIR+=	simgear

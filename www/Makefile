@@ -1,4 +1,4 @@
-# $NetBSD: Makefile,v 1.1412 2019/10/25 13:46:20 mef Exp $
+# $NetBSD: Makefile,v 1.1414 2019/11/06 13:35:18 ng0 Exp $
 #
 
 COMMENT=	Packages related to the World Wide Web
@@ -122,10 +122,12 @@ SUBDIR+=	gitweb
 SUBDIR+=	gnurl
 SUBDIR+=	go-ace
 SUBDIR+=	go-cssmin
+SUBDIR+=	go-fasthttp
 SUBDIR+=	go-gogs-client
 SUBDIR+=	go-gohtml
 SUBDIR+=	go-libsass
 SUBDIR+=	go-minify
+SUBDIR+=	go-mux
 SUBDIR+=	go-parse
 SUBDIR+=	go-spritewell
 SUBDIR+=	go-tocss
@@ -616,6 +618,7 @@ SUBDIR+=	py-WSGIProxy2
 SUBDIR+=	py-WebOb
 SUBDIR+=	py-WebTest
 SUBDIR+=	py-aiohttp
+SUBDIR+=	py-aiohttp-cors
 SUBDIR+=	py-asgiref
 SUBDIR+=	py-autobahn
 SUBDIR+=	py-beautifulsoup

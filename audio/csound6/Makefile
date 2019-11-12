@@ -1,24 +1,24 @@
-# $NetBSD: Makefile,v 1.39 2019/10/29 20:13:58 mrg Exp $
+# $NetBSD: Makefile,v 1.41 2019/11/03 11:51:01 rillig Exp $
 
-DISTNAME=		Csound${CSOUND_VERSION}
+DISTNAME=		csound-${CSOUND_VERSION}
 PKGNAME=		csound6-${CSOUND_VERSION}
-PKGREVISION=		27
 CATEGORIES=		audio
-MASTER_SITES=		${MASTER_SITE_SOURCEFORGE:=csound/csound6/Csound6.03/}
-WRKSRC=			${WRKDIR}/Csound${CSOUND_VERSION}
+MASTER_SITES=		${MASTER_SITE_GITHUB:=csound/}
+GITHUB_PROJECT=		csound
 
 MAINTAINER=		mrg@eterna.com.au
 HOMEPAGE=		https://sourceforge.net/projects/csound/
 COMMENT=		Software synthesizer and sequencer
 LICENSE=		gnu-lgpl-v2.1 # or later
 
-CSOUND_VERSION=		6.03.2
+CSOUND_VERSION=		6.13.0
+#WRKSRC=		${WRKDIR}/Csound${CSOUND_VERSION}
 USE_LANGUAGES=		c c++
 USE_TOOLS+=		bison
 CFLAGS+=		-g -D__PKGSRC_PREFIX__=\"${PREFIX}/\" -DBETA
 USE_CMAKE=		yes
 CMAKE_ARGS+=		-DUSE_PULSEAUDIO:BOOL=ON
-CMAKE_ARGS+=		-DBUILD_RELEASE=1 -DCMAKE_BUILD_TYPE=Release 
+CMAKE_ARGS+=		-DBUILD_RELEASE=1 -DCMAKE_BUILD_TYPE=Release
 # CMAKE_INSTALL_RPATH doesn't work for some reason, so do it here.
 LDFLAGS+=		${COMPILER_RPATH_FLAG}${PREFIX}/lib/csound6
 
@@ -37,9 +37,12 @@ CHECK_PORTABILITY_SKIP+=	installer/misc/makedeb.sh \
 .include "../../mk/bsd.prefs.mk"
 
 post-install:
-	cd ${DESTDIR}${PREFIX} && ${LN} -s ../lib/csound6/csound bin/csound6
+	cd ${DESTDIR}${PREFIX} && \
+		rm -f bin/csound6 && \
+		${LN} -s ../lib/csound6/csound bin/csound6
 
-#.include "../../audio/fluidsynth/buildlink3.mk"
+.include "../../audio/fluidsynth/buildlink3.mk"
+.include "../../audio/libsamplerate/buildlink3.mk"
 .include "../../audio/libsndfile/buildlink3.mk"
 .include "../../audio/pulseaudio/buildlink3.mk"
 .include "../../mk/jpeg.buildlink3.mk"

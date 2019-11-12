@@ -2,6 +2,193 @@ package pkglint
 
 import "gopkg.in/check.v1"
 
+func (s *Suite) Test_CheckLinesOptionsMk__literal(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpOption("declared", "")
+	t.SetUpOption("both", "")
+	t.SetUpOption("handled", "")
+	t.SetUpPackage("category/package",
+		".include \"../../mk/bsd.options.mk\"")
+	t.CreateFileLines("mk/bsd.options.mk",
+		MkCvsID)
+	mklines := t.SetUpFileMkLines("category/package/options.mk",
+		MkCvsID,
+		"",
+		"PKG_OPTIONS_VAR=\tPKG_OPTIONS.package",
+		"PKG_SUPPORTED_OPTIONS=\tdeclared both",
+		"",
+		".include \"../../mk/bsd.options.mk\"",
+		"",
+		".if ${PKG_OPTIONS:Mboth}",
+		".endif",
+		"",
+		".if ${PKG_OPTIONS:Mhandled}",
+		".endif")
+	t.Chdir("category/package")
+	t.FinishSetUp()
+
+	CheckLinesOptionsMk(mklines)
+
+	t.CheckOutputLines(
+		"WARN: ~/category/package/options.mk:4: "+
+			"Option \"declared\" should be handled below in an .if block.",
+		"WARN: ~/category/package/options.mk:11: "+
+			"Option \"handled\" is handled but not added to PKG_SUPPORTED_OPTIONS.")
+}
+
+func (s *Suite) Test_CheckLinesOptionsMk__literal_in_for_loop(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpOption("declared", "")
+	t.SetUpOption("both", "")
+	t.SetUpOption("handled", "")
+	t.SetUpPackage("category/package",
+		".include \"../../mk/bsd.options.mk\"")
+	t.CreateFileLines("mk/bsd.options.mk",
+		MkCvsID)
+	mklines := t.SetUpFileMkLines("category/package/options.mk",
+		MkCvsID,
+		"",
+		"PKG_OPTIONS_VAR=\tPKG_OPTIONS.package",
+		".for declared_option in declared both",
+		"PKG_SUPPORTED_OPTIONS=\t${declared_option}",
+		".endfor",
+		"",
+		".include \"../../mk/bsd.options.mk\"",
+		"",
+		".for handled_option in both handled",
+		".  if ${PKG_OPTIONS:M${handled_option}}",
+		".  endif",
+		".endfor")
+	t.Chdir("category/package")
+	t.FinishSetUp()
+
+	CheckLinesOptionsMk(mklines)
+
+	t.CheckOutputLines(
+		"WARN: ~/category/package/options.mk:5: "+
+			"Option \"declared\" should be handled below in an .if block.",
+		"WARN: ~/category/package/options.mk:11: "+
+			"Option \"handled\" is handled but not added to PKG_SUPPORTED_OPTIONS.")
+}
+
+// Before version 19.3.5, pkglint warned when bsd.prefs.mk was
+// included in the top half of the file.
+func (s *Suite) Test_CheckLinesOptionsMk__prefs(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpOption("option", "")
+	t.SetUpPackage("category/package",
+		".include \"../../mk/bsd.options.mk\"")
+	t.CreateFileLines("mk/bsd.options.mk",
+		MkCvsID)
+	mklines := t.SetUpFileMkLines("category/package/options.mk",
+		MkCvsID,
+		"",
+		".include \"../../mk/bsd.prefs.mk\"",
+		"",
+		"PKG_OPTIONS_VAR=\tPKG_OPTIONS.package",
+		"PKG_SUPPORTED_OPTIONS=\toption",
+		"",
+		".include \"../../mk/bsd.options.mk\"",
+		"",
+		".if ${PKG_OPTIONS:Moption}",
+		".endif")
+	t.Chdir("category/package")
+	t.FinishSetUp()
+
+	CheckLinesOptionsMk(mklines)
+
+	t.CheckOutputEmpty()
+}
+
+func (s *Suite) Test_CheckLinesOptionsMk__variable_order(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpOption("option", "")
+	t.SetUpPackage("category/package",
+		".include \"options.mk\"")
+	t.CreateFileLines("mk/bsd.options.mk",
+		MkCvsID)
+	mklines := t.SetUpFileMkLines("category/package/options.mk",
+		MkCvsID,
+		"",
+		"PKG_SUPPORTED_OPTIONS=\toption",
+		"PKG_OPTIONS_VAR=\tPKG_OPTIONS.package",
+		"",
+		".include \"../../mk/bsd.options.mk\"",
+		"",
+		".if ${PKG_OPTIONS:Moption}",
+		".endif")
+	t.Chdir("category/package")
+	t.FinishSetUp()
+
+	CheckLinesOptionsMk(mklines)
+
+	t.CheckOutputLines(
+		"WARN: ~/category/package/options.mk:3: " +
+			"Expected definition of PKG_OPTIONS_VAR.")
+}
+
+func (s *Suite) Test_CheckLinesOptionsMk__empty(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package",
+		".include \"options.mk\"")
+	mklines := t.SetUpFileMkLines("category/package/options.mk",
+		MkCvsID)
+	t.Chdir("category/package")
+	t.FinishSetUp()
+
+	CheckLinesOptionsMk(mklines)
+
+	t.CheckOutputLines(
+		"ERROR: ~/category/package/options.mk: "+
+			"Each options.mk file must define PKG_OPTIONS_VAR.",
+		"ERROR: ~/category/package/options.mk: "+
+			"Each options.mk file must .include \"../../mk/bsd.options.mk\".")
+}
+
+func (s *Suite) Test_CheckLinesOptionsMk__conditionals(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpOption("option", "")
+	t.SetUpPackage("category/package",
+		".include \"../../mk/bsd.options.mk\"")
+	t.CreateFileLines("mk/bsd.options.mk",
+		MkCvsID)
+	t.Chdir("category/package")
+	mklines := t.SetUpFileMkLines("options.mk",
+		MkCvsID,
+		"",
+		"PKG_OPTIONS_VAR=\tPKG_OPTIONS.package",
+		"PKG_SUPPORTED_OPTIONS=\toption",
+		"",
+		".include \"../../mk/bsd.options.mk\"",
+		"",
+		".if ${PKG_OPTIONS}", // typo: should be ${PKG_OPTIONS:Moption}
+		".endif",
+		"",
+		".if ${PKG_OPTIONS:Nnegative}", // :N instead of :M, is ignored
+		".endif",
+		"",
+		".if ${PKG_OPTIONS:Ncodec-*}",
+		".endif",
+		"",
+		".if ${PKG_OPTIONS:tl}", // doesn't make sense, just for branch coverage
+		".endif")
+	t.FinishSetUp()
+
+	CheckLinesOptionsMk(mklines)
+
+	t.CheckOutputLines(
+		// This warning comes from VarTypeCheck.PkgOption
+		"WARN: options.mk:11: Unknown option \"negative\".",
+		"WARN: options.mk:4: "+
+			"Option \"option\" should be handled below in an .if block.")
+}
+
 func (s *Suite) Test_CheckLinesOptionsMk(c *check.C) {
 	t := s.Init(c)
 
@@ -63,72 +250,10 @@ func (s *Suite) Test_CheckLinesOptionsMk(c *check.C) {
 			"The positive branch of the .if/.else should be the one where the option is set.",
 		// TODO: The diagnostics should appear in the correct order.
 		"WARN: ~/category/package/options.mk:6: "+
-			"Option \"mc-charset\" should be handled below in an .if block.",
-		"WARN: ~/category/package/options.mk:18: "+
-			"Option \"undeclared\" is handled but not added to PKG_SUPPORTED_OPTIONS.")
-}
-
-// This test is provided for code coverage. Similarities to existing files are purely coincidental.
-func (s *Suite) Test_CheckLinesOptionsMk__edge_cases(c *check.C) {
-	t := s.Init(c)
-
-	t.SetUpCommandLine("-Wall,no-space")
-	t.SetUpVartypes()
-	t.SetUpOption("option1", "Description for option1")
-	t.CreateFileLines("mk/compiler.mk",
-		MkCvsID)
-	t.CreateFileLines("mk/bsd.options.mk",
-		MkCvsID)
-	t.DisableTracing()
-
-	mklines := t.SetUpFileMkLines("category/package/options.mk",
-		MkCvsID)
-
-	CheckLinesOptionsMk(mklines)
-
-	t.CheckOutputLines(
-		"WARN: ~/category/package/options.mk:EOF: Expected definition of PKG_OPTIONS_VAR.")
-
-	mklines = t.SetUpFileMkLines("category/package/options.mk",
-		MkCvsID,
-		"PKG_SUPPORTED_OPTIONS=\toption1")
-
-	CheckLinesOptionsMk(mklines)
-
-	t.CheckOutputLines(
-		"WARN: ~/category/package/options.mk:2: Expected definition of PKG_OPTIONS_VAR.")
-
-	mklines = t.SetUpFileMkLines("category/package/options.mk",
-		MkCvsID,
-		"PKG_OPTIONS_VAR=\tPKG_OPTIONS.pkgbase",
-		"PKG_SUPPORTED_OPTIONS=\toption1",
-		".include \"../../mk/compiler.mk\"")
-
-	CheckLinesOptionsMk(mklines)
-
-	t.CheckOutputLines(
-		"WARN: ~/category/package/options.mk:3: " +
-			"Option \"option1\" should be handled below in an .if block.")
-
-	mklines = t.SetUpFileMkLines("category/package/options.mk",
-		MkCvsID,
-		"PKG_OPTIONS_VAR=\tPKG_OPTIONS.pkgbase",
-		"PKG_SUPPORTED_OPTIONS=\toption1",
-		".include \"../../mk/bsd.options.mk\"",
-		"",
-		".if !empty(PKG_OPTIONS:O:u:Moption1) "+
-			"|| !empty(PKG_OPTIONS:Noption1) "+
-			"|| !empty(PKG_OPTIONS:O) "+
-			"|| !empty(X11_TYPE) "+
-			"|| !empty(PKG_OPTIONS:M${X11_TYPE})",
-		".endif")
-
-	CheckLinesOptionsMk(mklines)
-
-	// Although technically this option is handled by the :Noption1 modifier,
-	// this is so unusual that the warning is justified.
-	t.CheckOutputLines(
-		"WARN: ~/category/package/options.mk:3: Option \"option1\" should be handled below in an .if block.")
+			"Option \"mc-charset\" should be handled below in an .if block.")
+	// TODO: There is no warning for the option "undeclared" since
+	//  the option lang-${l} sets declaredArbitrary. This in turn
+	//  disables possible wrong warnings, but a few too many.
 }
 
 // If there is no .include line after the declaration of the package-settable
@@ -155,7 +280,8 @@ func (s *Suite) Test_CheckLinesOptionsMk__unexpected_line(c *check.C) {
 	CheckLinesOptionsMk(mklines)
 
 	t.CheckOutputLines(
-		"WARN: ~/category/package/options.mk:5: Expected inclusion of \"../../mk/bsd.options.mk\".")
+		"ERROR: ~/category/package/options.mk: " +
+			"Each options.mk file must .include \"../../mk/bsd.options.mk\".")
 }
 
 func (s *Suite) Test_CheckLinesOptionsMk__malformed_condition(c *check.C) {
@@ -382,8 +508,195 @@ func (s *Suite) Test_CheckLinesOptionsMk__combined_option_handling_coverage(c *c
 
 	G.Check(".")
 
-	// The warning appears because the pattern "opt-[" is malformed
-	// and therefore doesn't match the option.
+	// The pattern "opt-[" does not match any of the declared options
+	// since the pattern is malformed and pkglint does not distinguish
+	// between invalid and non-matching patterns.
+	//
+	// The pattern "other-*" also doesn't match.
+	//
+	// Since the patterns don't match any of the variables from
+	// PKG_SUPPORTED_OPTIONS, pkglint cannot analyze all possible cases
+	// and therefore suppresses all warnings about options that are
+	// declared but not handled.
+	t.CheckOutputEmpty()
+}
+
+func (s *Suite) Test_CheckLinesOptionsMk__options_in_for_loop(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpOption("idea", "")
+	t.SetUpOption("md2", "")
+	t.SetUpOption("md5", "")
+	t.SetUpOption("other", "")
+	t.CreateFileLines("mk/bsd.options.mk")
+	t.SetUpPackage("category/package",
+		".include \"options.mk\"")
+	t.CreateFileLines("category/package/options.mk",
+		MkCvsID,
+		"",
+		"PKG_OPTIONS_VAR=\tPKG_OPTIONS.package",
+		"PKG_SUPPORTED_OPTIONS=\tidea md2 md5 other",
+		"",
+		".include \"../../mk/bsd.options.mk\"",
+		"",
+		".for alg in idea md2 md5",
+		".  if ${PKG_OPTIONS:M${alg}}",
+		".  endif",
+		".endfor")
+	t.FinishSetUp()
+	t.Chdir("category/package")
+
+	G.Check(".")
+
 	t.CheckOutputLines(
-		"WARN: options.mk:4: Option \"opt-variant\" should be handled below in an .if block.")
+		"WARN: options.mk:4: Option \"other\" should be handled below in an .if block.")
+}
+
+func (s *Suite) Test_CheckLinesOptionsMk__indirect(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpOption("generic", "")
+	t.SetUpOption("netbsd", "")
+	t.SetUpOption("os", "")
+	t.CreateFileLines("mk/bsd.options.mk")
+	t.SetUpPackage("category/package",
+		".include \"options.mk\"")
+	t.CreateFileLines("category/package/options.mk",
+		MkCvsID,
+		"",
+		"PKG_OPTIONS_VAR=\tPKG_OPTIONS.package",
+		"PKG_SUPPORTED_OPTIONS=\tgeneric",
+		"PKG_SUGGESTED_OPTIONS=\tgeneric",
+		"",
+		"PKG_SUPPORTED_OPTIONS.FreeBSD=\tos",
+		"PKG_SUGGESTED_OPTIONS.FreeBSD=\tos",
+		"",
+		"PKG_SUPPORTED_OPTIONS.NetBSD+=\tnetbsd os",
+		"PKG_SUGGESTED_OPTIONS.NetBSD+=\tnetbsd os",
+		"",
+		".include \"../../mk/bsd.options.mk\"",
+		"",
+		"PLIST_VARS+=\tgeneric netbsd os",
+		"",
+		".for option in ${PLIST_VARS}",
+		".  if ${PKG_OPTIONS:M${option}}",
+		"CONFIGURE_ARGS+=\t--enable-${option:S/-/_/}",
+		"PLIST.${option}=\tyes",
+		".  endif",
+		".endfor")
+	t.FinishSetUp()
+	t.Chdir("category/package")
+
+	G.Check(".")
+
+	t.CheckOutputEmpty()
+}
+
+// An unrealistic scenario, but necessary for code coverage.
+func (s *Suite) Test_CheckLinesOptionsMk__partly_indirect(c *check.C) {
+	t := s.Init(c)
+
+	t.CreateFileLines("mk/bsd.options.mk")
+	t.SetUpPackage("category/package",
+		".include \"options.mk\"")
+	t.CreateFileLines("category/package/options.mk",
+		MkCvsID,
+		"",
+		"PKG_OPTIONS_VAR=\tPKG_OPTIONS.package",
+		"PKG_SUPPORTED_OPTIONS=\tgeneric-${OPSYS}",
+		"",
+		".include \"../../mk/bsd.options.mk\"",
+		"",
+		".for option in generic-${OPSYS}",
+		".  if ${PKG_OPTIONS:M${option}}",
+		".  endif",
+		".endfor")
+	t.FinishSetUp()
+	t.Chdir("category/package")
+
+	G.Check(".")
+
+	t.CheckOutputEmpty()
+}
+
+func (s *Suite) Test_CheckLinesOptionsMk__indirect_supported_options_parentheses(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpOption("indirect", "")
+	t.SetUpOption("direct", "")
+	t.SetUpVartypes()
+	t.CreateFileLines("mk/bsd.options.mk",
+		MkCvsID)
+	mklines := t.SetUpFileMkLines("category/package/options.mk",
+		MkCvsID,
+		"",
+		"PKG_OPTIONS_VAR=\tPKG_OPTIONS.package",
+		"OPTIONS=\t\tindirect",
+		"PKG_SUPPORTED_OPTIONS=\t$(OPTIONS) direct",
+		"",
+		".include \"../../mk/bsd.options.mk\"",
+		"",
+		".for option in ${OPTIONS}",
+		".  if ${PKG_OPTIONS:M${option}}",
+		".  endif",
+		".endfor")
+
+	CheckLinesOptionsMk(mklines)
+
+	t.CheckOutputLines(
+		"WARN: ~/category/package/options.mk:5: "+
+			"Please use curly braces {} instead of round parentheses () for OPTIONS.",
+		"WARN: ~/category/package/options.mk:5: "+
+			"Option \"direct\" should be handled below in an .if block.")
+}
+
+func (s *Suite) Test_CheckLinesOptionsMk__handled_but_not_supported(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpOption("option", "")
+	t.SetUpVartypes()
+	t.CreateFileLines("mk/bsd.options.mk",
+		MkCvsID)
+	mklines := t.SetUpFileMkLines("category/package/options.mk",
+		MkCvsID,
+		"",
+		"PKG_OPTIONS_VAR=\tPKG_OPTIONS.package",
+		"PKG_SUPPORTED_OPTIONS=\t# none",
+		"",
+		".include \"../../mk/bsd.options.mk\"",
+		"",
+		".if ${PKG_OPTIONS:Moption}",
+		".endif")
+
+	CheckLinesOptionsMk(mklines)
+
+	t.CheckOutputLines(
+		"WARN: ~/category/package/options.mk:8: " +
+			"Option \"option\" is handled but not added to PKG_SUPPORTED_OPTIONS.")
+}
+
+func (s *Suite) Test_CheckLinesOptionsMk__supported_but_not_checked(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpOption("option", "")
+	t.SetUpVartypes()
+	t.CreateFileLines("mk/bsd.options.mk",
+		MkCvsID)
+	mklines := t.SetUpFileMkLines("category/package/options.mk",
+		MkCvsID,
+		"",
+		"PKG_OPTIONS_VAR=\tPKG_OPTIONS.package",
+		"PKG_SUPPORTED_OPTIONS=\toption",
+		"",
+		".include \"../../mk/bsd.options.mk\"",
+		"",
+		".if ${PKG_OPTIONS:Mopt${:Uion}}",
+		".endif")
+
+	CheckLinesOptionsMk(mklines)
+
+	// Pkglint does not expand the ${:Uion}, therefore it doesn't know that
+	// the option is indeed handled. Because of this uncertainty, pkglint
+	// does not issue any warnings about possibly unhandled options at all.
+	t.CheckOutputEmpty()
 }

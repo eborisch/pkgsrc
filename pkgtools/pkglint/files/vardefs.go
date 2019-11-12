@@ -156,6 +156,26 @@ func (reg *VarTypeRegistry) pkglistrat(varname string, basicType *BasicType) {
 		"Makefile, Makefile.*, *.mk: default, set, append, use")
 }
 
+// Like pkglist, but only one value per line should be given.
+// Typical example: PKG_FAIL_REASON.
+func (reg *VarTypeRegistry) pkglistone(varname string, basicType *BasicType) {
+	reg.acllist(varname, basicType,
+		List|PackageSettable|OnePerLine,
+		"buildlink3.mk, builtin.mk: none",
+		"Makefile, Makefile.*, *.mk: default, set, append, use")
+}
+
+// A package-defined load-time list may be used or defined or appended to in
+// all Makefiles except buildlink3.mk and builtin.mk. Simple assignment
+// (instead of appending) is also allowed. If this leads to an unconditional
+// assignment overriding a previous value, the redundancy check will catch it.
+func (reg *VarTypeRegistry) pkgloadlist(varname string, basicType *BasicType) {
+	reg.acllist(varname, basicType,
+		List|PackageSettable,
+		"buildlink3.mk, builtin.mk: none",
+		"Makefile, Makefile.*, *.mk: default, set, append, use, use-loadtime")
+}
+
 // pkgappend declares a variable that may use the += operator,
 // even though it is not a list where each item can be interpreted
 // on its own.
@@ -328,7 +348,7 @@ func (reg *VarTypeRegistry) compilerLanguages(src *Pkgsrc) *BasicType {
 					VarUse: func(varuse *MkVarUse) {
 						if varuse.varname == "USE_LANGUAGES" && len(varuse.modifiers) == 1 {
 							ok, _, pattern, exact := varuse.modifiers[0].MatchMatch()
-							if ok && exact && !containsVarRef(pattern) {
+							if ok && exact {
 								languages[intern(pattern)] = true
 							}
 						}
@@ -805,8 +825,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	reg.sys("BINOWN", BtUserGroupName)
 	reg.pkglist("BOOTSTRAP_DEPENDS", BtDependencyWithPath)
 	reg.pkg("BOOTSTRAP_PKG", BtYesNo)
-	// BROKEN should better be a list of messages instead of a simple string.
-	reg.pkgappend("BROKEN", BtMessage)
+	reg.pkglistone("BROKEN", BtShellWord)
 	reg.pkg("BROKEN_GETTEXT_DETECTION", BtYesNo)
 	reg.pkglistrat("BROKEN_EXCEPT_ON_PLATFORM", BtMachinePlatformPattern)
 	reg.pkglistrat("BROKEN_ON_PLATFORM", BtMachinePlatformPattern)
@@ -1380,7 +1399,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	reg.usrlist("PKG_DEFAULT_OPTIONS", BtOption)
 	reg.sys("PKG_DELETE", BtShellCommand)
 	reg.pkglist("PKG_DESTDIR_SUPPORT", enum("destdir user-destdir"))
-	reg.pkglist("PKG_FAIL_REASON", BtShellWord)
+	reg.pkglistone("PKG_FAIL_REASON", BtShellWord)
 	reg.sysload("PKG_FORMAT", BtIdentifier)
 	reg.pkg("PKG_GECOS.*", BtMessage)
 	reg.pkg("PKG_GID.*", BtInteger)
@@ -1396,7 +1415,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	reg.acllist("PKG_HACKS", BtIdentifier,
 		PackageSettable,
 		"*: none")
-	reg.sys("PKG_INFO", BtShellCommand)
+	reg.sysload("PKG_INFO", BtShellCommand)
 	reg.sys("PKG_JAVA_HOME", BtPathname)
 	reg.sys("PKG_JVM", jvms)
 	reg.pkglistrat("PKG_JVMS_ACCEPTED", jvms)
@@ -1409,28 +1428,27 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	//  define them in the Makefile or Makefile.common.
 	reg.sysloadlist("PKG_OPTIONS", BtOption)
 	reg.usrlist("PKG_OPTIONS.*", BtOption)
-	opt := reg.pkg
-	optlist := reg.pkglist
-	optlist("PKG_LEGACY_OPTIONS", BtOption)
-	optlist("PKG_OPTIONS_DEPRECATED_WARNINGS", BtShellWord)
-	optlist("PKG_OPTIONS_GROUP.*", BtOption)
-	optlist("PKG_OPTIONS_LEGACY_OPTS", BtUnknown)
-	optlist("PKG_OPTIONS_LEGACY_VARS", BtUnknown)
-	optlist("PKG_OPTIONS_NONEMPTY_SETS", BtIdentifier)
-	optlist("PKG_OPTIONS_OPTIONAL_GROUPS", BtIdentifier)
-	optlist("PKG_OPTIONS_REQUIRED_GROUPS", BtIdentifier)
-	optlist("PKG_OPTIONS_SET.*", BtOption)
-	opt("PKG_OPTIONS_VAR", BtPkgOptionsVar)
-	reg.pkglist("PKG_SKIP_REASON", BtShellWord)
-	optlist("PKG_SUGGESTED_OPTIONS", BtOption)
-	optlist("PKG_SUGGESTED_OPTIONS.*", BtOption)
-	optlist("PKG_SUPPORTED_OPTIONS", BtOption)
+	reg.pkgloadlist("PKG_LEGACY_OPTIONS", BtOption)
+	reg.pkgloadlist("PKG_OPTIONS_DEPRECATED_WARNINGS", BtShellWord)
+	reg.pkgloadlist("PKG_OPTIONS_GROUP.*", BtOption)
+	reg.pkgloadlist("PKG_OPTIONS_LEGACY_OPTS", BtUnknown)
+	reg.pkgloadlist("PKG_OPTIONS_LEGACY_VARS", BtUnknown)
+	reg.pkgloadlist("PKG_OPTIONS_NONEMPTY_SETS", BtIdentifier)
+	reg.pkgloadlist("PKG_OPTIONS_OPTIONAL_GROUPS", BtIdentifier)
+	reg.pkgloadlist("PKG_OPTIONS_REQUIRED_GROUPS", BtIdentifier)
+	reg.pkgloadlist("PKG_OPTIONS_SET.*", BtOption)
+	reg.pkgload("PKG_OPTIONS_VAR", BtPkgOptionsVar)
+	reg.pkgloadlist("PKG_SUGGESTED_OPTIONS", BtOption)
+	reg.pkgloadlist("PKG_SUGGESTED_OPTIONS.*", BtOption)
+	reg.pkgloadlist("PKG_SUPPORTED_OPTIONS", BtOption)
+	reg.pkgloadlist("PKG_SUPPORTED_OPTIONS.*", BtOption)
 	// end PKG_OPTIONS section
 
 	reg.pkg("PKG_PRESERVE", BtYes)
 	reg.pkg("PKG_SHELL", BtPathname)
 	reg.pkg("PKG_SHELL.*", BtPathname)
 	reg.sys("PKG_SHLIBTOOL", BtPathname)
+	reg.pkglistone("PKG_SKIP_REASON", BtShellWord)
 	// The special exception for buildlink3.mk is only here because
 	// of textproc/xmlcatmgr.
 	reg.acl("PKG_SYSCONFDIR*", BtPathname,
@@ -1447,7 +1465,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	reg.pkglist("PKG_USERS_VARS", BtVariableName)
 	reg.pkg("PKG_USE_KERBEROS", BtYes)
 	reg.pkgload("PLIST.*", BtYes)
-	reg.pkglist("PLIST_VARS", BtIdentifier)
+	reg.pkgloadlist("PLIST_VARS", BtIdentifier)
 	reg.pkglist("PLIST_SRC", BtRelativePkgPath)
 	reg.pkglist("PLIST_SUBST", BtShellWord)
 	reg.pkg("PLIST_TYPE", enum("dynamic static"))

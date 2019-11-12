@@ -1,4 +1,4 @@
-# $NetBSD: Makefile,v 1.716 2019/10/29 09:17:37 nia Exp $
+# $NetBSD: Makefile,v 1.719 2019/11/07 03:28:19 jnemeth Exp $
 #
 
 COMMENT=	Security tools
@@ -105,6 +105,7 @@ SUBDIR+=	go-crypto
 SUBDIR+=	go-mkcert
 SUBDIR+=	go-oauth2
 SUBDIR+=	go-sftp
+SUBDIR+=	go-xxhash
 SUBDIR+=	google-authenticator
 SUBDIR+=	gpa
 SUBDIR+=	gpass
@@ -228,6 +229,7 @@ SUBDIR+=	ocaml-ssl
 SUBDIR+=	opencdk
 SUBDIR+=	openct
 SUBDIR+=	opendnssec
+SUBDIR+=	opendnssec2
 SUBDIR+=	openpam
 SUBDIR+=	opensaml
 SUBDIR+=	opensc
@@ -571,6 +573,7 @@ SUBDIR+=	snoopy
 SUBDIR+=	snortsnarf
 SUBDIR+=	snow
 SUBDIR+=	softhsm
+SUBDIR+=	softhsm2
 SUBDIR+=	spiped
 SUBDIR+=	sqlmap
 SUBDIR+=	srm

@@ -1,7 +1,7 @@
-# $NetBSD: Makefile,v 1.1 2019/09/21 07:31:43 ryoon Exp $
+# $NetBSD: Makefile,v 1.3 2019/11/05 17:14:30 ryoon Exp $
 
 FIREFOX_VER=		${MOZ_BRANCH}${MOZ_BRANCH_MINOR}
-MOZ_BRANCH=		68.1
+MOZ_BRANCH=		68.2
 MOZ_BRANCH_MINOR=	.0esr
 
 DISTNAME=	firefox-${FIREFOX_VER}.source
@@ -54,12 +54,12 @@ SUBST_FILES.dfly_malloc_h+=	media/ffvpx/libavutil/mem.c
 .include "mozilla-common.mk"
 .include "options.mk"
 
-CHECK_INTERPRETER_SKIP+=lib/firefox-sdk/sdk/bin/header.py
-CHECK_INTERPRETER_SKIP+=lib/firefox-sdk/sdk/bin/typelib.py
-CHECK_INTERPRETER_SKIP+=lib/firefox-sdk/sdk/bin/xpidl.py
-CHECK_INTERPRETER_SKIP+=lib/firefox-sdk/sdk/bin/xpt.py
+CHECK_INTERPRETER_SKIP+=	lib/firefox-sdk/sdk/bin/header.py
+CHECK_INTERPRETER_SKIP+=	lib/firefox-sdk/sdk/bin/typelib.py
+CHECK_INTERPRETER_SKIP+=	lib/firefox-sdk/sdk/bin/xpidl.py
+CHECK_INTERPRETER_SKIP+=	lib/firefox-sdk/sdk/bin/xpt.py
 
-CHECK_WRKREF_SKIP+=lib/${MOZILLA}/chrome/toolkit/content/global/buildconfig.html
+CHECK_WRKREF_SKIP+=	lib/${MOZILLA}/chrome/toolkit/content/global/buildconfig.html
 
 MOZILLA=	${PKGBASE}
 MOZILLA_ICON=	${WRKSRC}/${OBJDIR}/dist/${MOZILLA}/browser/chrome/icons/default/default48.png

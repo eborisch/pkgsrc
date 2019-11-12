@@ -1,4 +1,4 @@
-# $NetBSD: Makefile,v 1.1275 2019/10/31 16:58:03 gdt Exp $
+# $NetBSD: Makefile,v 1.1277 2019/11/06 11:54:49 ng0 Exp $
 #
 
 COMMENT=	Networking tools
@@ -200,6 +200,7 @@ SUBDIR+=	go-framestream
 SUBDIR+=	go-grpc
 SUBDIR+=	go-net
 SUBDIR+=	go-ovh
+SUBDIR+=	go-tcplisten
 SUBDIR+=	go-websocket
 SUBDIR+=	gofish
 SUBDIR+=	gopher
@@ -895,7 +896,6 @@ SUBDIR+=	uftp
 SUBDIR+=	unbound
 SUBDIR+=	unfs3
 SUBDIR+=	unifi
-SUBDIR+=	unison2.48
 SUBDIR+=	unison2.51
 SUBDIR+=	unworkable
 SUBDIR+=	upclient

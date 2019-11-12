@@ -1,8 +1,7 @@
-# $NetBSD: Makefile,v 1.30 2019/10/07 09:28:09 prlw1 Exp $
+# $NetBSD: Makefile,v 1.32 2019/11/10 11:27:07 nia Exp $
 
-DISTNAME=		mpc-0.32
+DISTNAME=		mpc-0.33
 CATEGORIES=		audio
-#MASTER_SITES=		${MASTER_SITE_SOURCEFORGE:=musicpd/}
 MASTER_SITES=		http://www.musicpd.org/download/mpc/0/
 EXTRACT_SUFX=		.tar.xz
 
@@ -16,7 +15,7 @@ USE_TOOLS+=		pkg-config
 
 REPLACE_SH=		doc/*.sh
 
-LIBS+=			${BUILDLINK_LDADD.iconv}
+LDFLAGS+=		${BUILDLINK_LDADD.iconv}
 
 # By default it generates and installs HTML documentation if py-sphinx
 # is installed, causing our PLIST check to fail.

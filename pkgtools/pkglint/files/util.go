@@ -609,7 +609,7 @@ func pathContainsDir(haystack, needle string) bool {
 }
 
 func containsVarRef(s string) bool {
-	return contains(s, "${")
+	return contains(s, "${") || contains(s, "$(")
 }
 
 func hasAlnumPrefix(s string) bool { return s != "" && textproc.AlnumU.Contains(s[0]) }
@@ -1383,4 +1383,35 @@ func shquote(s string) string {
 		return s
 	}
 	return "'" + strings.Replace(s, "'", "'\\''", -1) + "'"
+}
+
+func pathMatches(pattern, s string) bool {
+	matched, err := path.Match(pattern, s)
+	return err == nil && matched
+}
+
+type StringQueue struct {
+	entries []string
+}
+
+func (q *StringQueue) PushFront(entries ...string) {
+	q.entries = append(append([]string(nil), entries...), q.entries...)
+}
+
+func (q *StringQueue) Push(entries ...string) {
+	q.entries = append(q.entries, entries...)
+}
+
+func (q *StringQueue) Empty() bool {
+	return len(q.entries) == 0
+}
+
+func (q *StringQueue) Front() string {
+	return q.entries[0]
+}
+
+func (q *StringQueue) Pop() string {
+	front := q.entries[0]
+	q.entries = q.entries[1:]
+	return front
 }
