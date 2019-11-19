@@ -1,4 +1,4 @@
-# $NetBSD: Makefile,v 1.587 2019/11/10 14:42:43 ng0 Exp $
+# $NetBSD: Makefile,v 1.589 2019/11/17 05:48:43 markd Exp $
 
 COMMENT=	Databases
 
@@ -47,6 +47,7 @@ SUBDIR+=	gramps3
 SUBDIR+=	gtkdbfeditor
 SUBDIR+=	gtksql
 SUBDIR+=	guile-pg
+SUBDIR+=	guile-sqlite3
 SUBDIR+=	hiredis
 SUBDIR+=	hsqldb18
 SUBDIR+=	idzebra
@@ -61,6 +62,7 @@ SUBDIR+=	jdbc-mysql31
 SUBDIR+=	jdbc-mysql5
 SUBDIR+=	jdbc-mysql51
 SUBDIR+=	jdbc-postgresql94
+SUBDIR+=	kldap
 SUBDIR+=	kyotocabinet
 SUBDIR+=	lbdb
 SUBDIR+=	ldapvi

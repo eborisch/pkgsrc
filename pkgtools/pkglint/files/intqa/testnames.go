@@ -6,95 +6,118 @@ import (
 	"go/ast"
 	"go/parser"
 	"go/token"
-	"gopkg.in/check.v1"
+	"io"
 	"os"
-	"path/filepath"
+	"path"
+	"reflect"
 	"sort"
 	"strings"
 	"unicode"
 )
 
+type Error int
+
+const (
+	ENone Error = iota + 1
+	EAll
+
+	// A function or method does not have a corresponding test.
+	EMissingTest
+
+	// The name of a test function does not correspond to a program
+	// element to be tested.
+	EMissingTestee
+
+	// The tests are not in the same order as their corresponding
+	// testees in the main code.
+	EOrder
+
+	// The test method does not have a valid name.
+	EName
+
+	// The file of the test method does not correspond to the
+	// file of the testee.
+	EFile
+)
+
 // TestNameChecker ensures that all test names follow a common naming scheme:
-//
-// Test_${Type}_${Method}__${description_using_underscores}
+//  Test_${Type}_${Method}__${description_using_underscores}
+// Each of the variable parts may be omitted.
 type TestNameChecker struct {
-	camelCase map[string]bool
-	ignore    []string
-	warn      bool
-	prefixes  []testeePrefix
-	c         *check.C
-	errors    []string
-	warnings  []string
+	errorf func(format string, args ...interface{})
+
+	filters []filter
+	order   int
+
+	testees []*testee
+	tests   []*test
+
+	errors []string
+	out    io.Writer
 }
 
-type testeePrefix struct {
-	prefix   string
-	filename string
+// NewTestNameChecker creates a new checker.
+// By default, all errors are enabled;
+// call Configure to disable them selectively.
+func NewTestNameChecker(errorf func(format string, args ...interface{})) *TestNameChecker {
+	ck := TestNameChecker{errorf: errorf, out: os.Stderr}
+
+	// For test fixtures from https://gopkg.in/check/v1.
+	ck.Configure("*_test.go", "*", "SetUpTest", -EMissingTest)
+	ck.Configure("*_test.go", "*", "TearDownTest", -EMissingTest)
+
+	// See https://github.com/rillig/gobco.
+	ck.Configure("gobco_*.go", "gobco*", "*", -EMissingTest)
+	ck.Configure("gobco_*.go", "", "gobco*", -EMissingTest)
+
+	return &ck
 }
 
-// testeeElement is an element of the source code that can be tested.
-// It is either a type, a function or a method.
-// The test methods are also testeeElements.
-type testeeElement struct {
-	File string // The file containing the testeeElement
-	Type string // The type, e.g. MkLine
-	Func string // The function or method name, e.g. Warnf
-
-	FullName string // Type + "." + Func
-
-	// Whether the testeeElement is a test or a testee
-	Test bool
-
-	// For a test, its name without the description,
-	// otherwise the prefix (Type + "_" + Func) for the corresponding tests
-	Prefix string
-}
-
-func NewTestNameChecker(c *check.C) *TestNameChecker {
-	return &TestNameChecker{c: c, camelCase: make(map[string]bool)}
-}
-
-func (ck *TestNameChecker) IgnoreFiles(fileGlob string) {
-	ck.ignore = append(ck.ignore, fileGlob)
-}
-
-// AllowPrefix allows tests with the given prefix to appear in the test
-// file corresponding to the given source file (which doesn't even have
-// to exist).
+// Configure sets the errors that are activated for the given code,
+// specified by shell patterns like in path.Match.
 //
-// In all other cases, the tests may only be named after things from the
-// main code that can actually be tested.
-func (ck *TestNameChecker) AllowPrefix(prefix, sourceFileName string) {
-	ck.prefixes = append(ck.prefixes, testeePrefix{prefix, sourceFileName})
+// All rules are applied in order. Later rules overwrite earlier rules.
+//
+// Individual errors can be enabled by giving their constant and disabled
+// by negating them, such as -EMissingTestee. To reset everything, use
+// either EAll or ENone.
+func (ck *TestNameChecker) Configure(filenames, typeNames, funcNames string, errors ...Error) {
+	ck.filters = append(ck.filters, filter{filenames, typeNames, funcNames, errors})
 }
 
-// AllowCamelCaseDescriptions allows the given strings to appear
-// in the description part of a test name (Test_$Type_$Method__$description).
-// In most cases the description should use snake case to allow for
-// easier reading.
-//
-// When writing tests for combinations of several functions, it is most
-// natural to mention one of these functions in the test name and the
-// other in the test description. This is a typical use case.
-func (ck *TestNameChecker) AllowCamelCaseDescriptions(descriptions ...string) {
-	for _, description := range descriptions {
-		ck.camelCase[description] = true
+func (ck *TestNameChecker) Check() {
+	ck.load(".")
+	ck.checkTestees()
+	ck.checkTests()
+	ck.checkOrder()
+	ck.print()
+}
+
+// load loads all type, function and method names from the current package.
+func (ck *TestNameChecker) load(dir string) {
+
+	fileSet := token.NewFileSet()
+	pkgs, err := parser.ParseDir(fileSet, dir, nil, 0)
+	if err != nil {
+		panic(err)
 	}
+
+	for _, pkgname := range sortedKeys(pkgs) {
+		files := pkgs[pkgname].Files
+
+		for _, filename := range sortedKeys(files) {
+			file := files[filename]
+			for _, decl := range file.Decls {
+				ck.loadDecl(decl, filename)
+			}
+		}
+	}
+
+	ck.relate()
 }
 
-func (ck *TestNameChecker) ShowWarnings(warn bool) { ck.warn = warn }
-
-func (ck *TestNameChecker) addError(format string, args ...interface{}) {
-	ck.errors = append(ck.errors, "E: "+fmt.Sprintf(format, args...))
-}
-
-func (ck *TestNameChecker) addWarning(format string, args ...interface{}) {
-	ck.warnings = append(ck.warnings, "W: "+fmt.Sprintf(format, args...))
-}
-
-// addElement adds a single type or function declaration
-// to the known elements.
-func (ck *TestNameChecker) addElement(elements *[]*testeeElement, decl ast.Decl, filename string) {
+// loadDecl adds a single type or function declaration to the known elements.
+func (ck *TestNameChecker) loadDecl(decl ast.Decl, filename string) {
 	switch decl := decl.(type) {
 
 	case *ast.GenDecl:
@@ -102,7 +125,7 @@ func (ck *TestNameChecker) addElement(elements *[]*testeeElement, decl ast.Decl,
 			switch spec := spec.(type) {
 			case *ast.TypeSpec:
 				typeName := spec.Name.Name
-				*elements = append(*elements, newElement(typeName, "", filename))
+				ck.addCode(code{filename, typeName, "", 0})
 			}
 		}
 
@@ -116,184 +139,325 @@ func (ck *TestNameChecker) addElement(elements *[]*testeeElement, decl ast.Decl,
 				typeName = typeExpr.(*ast.Ident).Name
 			}
 		}
-		*elements = append(*elements, newElement(typeName, decl.Name.Name, filename))
+		funcName := decl.Name.Name
+		ck.addCode(code{filename, typeName, funcName, 0})
 	}
 }
 
-// loadAllElements returns all type, function and method names
-// from the current package, in the form FunctionName or
-// TypeName.MethodName (omitting the * from the type name).
-func (ck *TestNameChecker) loadAllElements() []*testeeElement {
-	fileSet := token.NewFileSet()
-	pkgs, err := parser.ParseDir(fileSet, ".", func(fi os.FileInfo) bool { return true }, 0)
-	if err != nil {
-		panic(err)
+func (ck *TestNameChecker) addCode(code code) {
+	if code.isTestScope() && code.isFunc() && code.Func == "TestMain" {
+		// This is not a test for Main, but a wrapper function of the test.
+		// Therefore it is completely ignored.
+		// See https://golang.org/pkg/testing/#hdr-Main.
+		//
+		// Among others, this function is created by
+		// https://github.com/rillig/gobco when measuring the branch
+		// coverage of a package.
+		return
 	}
 
-	var elements []*testeeElement
-	for _, pkg := range pkgs {
-		for filename, file := range pkg.Files {
-			for _, decl := range file.Decls {
-				ck.addElement(&elements, decl, filename)
-			}
-		}
+	if !ck.isRelevant(code.file, code.Type, code.Func, EAll) {
+		return
 	}
 
-	sort.Slice(elements, func(i, j int) bool { return elements[i].Less(elements[j]) })
-
-	return elements
-}
-
-// collectTesteeByName generates a map containing the names of all
-// testable elements, as used in the test names. Examples:
-//
-//  Autofix
-//  Line_Warnf
-//  match5
-func (ck *TestNameChecker) collectTesteeByName(elements []*testeeElement) map[string]*testeeElement {
-	prefixes := make(map[string]*testeeElement)
-	for _, element := range elements {
-		if element.Prefix != "" {
-			prefixes[element.Prefix] = element
-		}
-	}
-
-	for _, p := range ck.prefixes {
-		prefixes[p.prefix] = newElement(p.prefix, "", p.filename)
-	}
-
-	return prefixes
-}
-
-func (ck *TestNameChecker) checkTestName(test *testeeElement, prefix string, descr string, testeeByName map[string]*testeeElement) {
-	testee := testeeByName[prefix]
-	if testee == nil {
-		ck.addError("Test %q for missing testee %q.", test.FullName, prefix)
-
-	} else if !strings.HasSuffix(testee.File, "_test.go") {
-		correctTestFile := strings.TrimSuffix(testee.File, ".go") + "_test.go"
-		if correctTestFile != test.File {
-			ck.addError("Test %q for %q must be in %s instead of %s.",
-				test.FullName, testee.FullName, correctTestFile, test.File)
-		}
-	}
-
-	if isCamelCase(descr) && !ck.camelCase[descr] {
-		ck.addError("%s: Test description %q must not use CamelCase.", test.FullName, descr)
-	}
-}
-
-func (ck *TestNameChecker) checkAll(elements []*testeeElement, testeeByName map[string]*testeeElement) {
-	testNames := make(map[string]bool)
-
-	for _, element := range elements {
-		if element.Test {
-			method := element.Func
-			switch {
-			case strings.HasPrefix(method, "Test__"):
-				// OK
-
-			case strings.HasPrefix(method, "Test_"):
-				refAndDescr := strings.SplitN(method[5:], "__", 2)
-				descr := ""
-				if len(refAndDescr) > 1 {
-					descr = refAndDescr[1]
-				}
-				testNames[refAndDescr[0]] = true
-				ck.checkTestName(element, refAndDescr[0], descr, testeeByName)
-
-			default:
-				ck.addError("Test name %q must contain an underscore.", element.FullName)
-			}
-		}
-	}
-
-	for _, element := range elements {
-		if !strings.HasSuffix(element.File, "_test.go") && !ck.isIgnored(element.File) {
-			if !testNames[element.Prefix] {
-				ck.addWarning("Missing unit test %q for %q.",
-					"Test_"+element.Prefix, element.FullName)
-			}
-		}
-	}
-}
-
-func (ck *TestNameChecker) Check() {
-	elements := ck.loadAllElements()
-	testeeByName := ck.collectTesteeByName(elements)
-	ck.checkAll(elements, testeeByName)
-
-	for _, err := range ck.errors {
-		fmt.Println(err)
-	}
-	for _, warning := range ck.warnings {
-		if ck.warn {
-			fmt.Println(warning)
-		}
-	}
-	if len(ck.errors) > 0 || (ck.warn && len(ck.warnings) > 0) {
-		ck.c.Errorf("%d %s and %d %s.",
-			len(ck.errors),
-			ifelseStr(len(ck.errors) == 1, "error", "errors"),
-			len(ck.warnings),
-			ifelseStr(len(ck.warnings) == 1, "warning", "warnings"))
-	}
-}
-
-func (ck *TestNameChecker) isIgnored(filename string) bool {
-	for _, mask := range ck.ignore {
-		ok, err := filepath.Match(mask, filename)
-		if err != nil {
-			panic(err)
-		}
-		if ok {
-			return true
-		}
-	}
-	return false
-}
-
-func newElement(typeName, funcName, filename string) *testeeElement {
-	typeName = strings.TrimSuffix(typeName, "Impl")
-
-	e := testeeElement{File: filename, Type: typeName, Func: funcName}
-
-	e.FullName = e.Type + ifelseStr(e.Type != "" && e.Func != "", ".", "") + e.Func
-
-	e.Test = strings.HasSuffix(e.File, "_test.go") && e.Type != "" && strings.HasPrefix(e.Func, "Test")
-
-	if e.Test {
-		e.Prefix = strings.Split(strings.TrimPrefix(e.Func, "Test"), "__")[0]
+	if code.isTest() {
+		ck.addTest(code)
 	} else {
-		e.Prefix = e.Type + ifelseStr(e.Type != "" && e.Func != "", "_", "") + e.Func
-	}
-
-	return &e
-}
-
-func (el *testeeElement) Less(other *testeeElement) bool {
-	switch {
-	case el.Type != other.Type:
-		return el.Type < other.Type
-	case el.Func != other.Func:
-		return el.Func < other.Func
-	default:
-		return el.File < other.File
+		ck.addTestee(code)
 	}
 }
 
-func ifelseStr(cond bool, a, b string) string {
-	if cond {
-		return a
+func (ck *TestNameChecker) addTestee(code code) {
+	code.order = ck.nextOrder()
+	ck.testees = append(ck.testees, &testee{code})
+}
+
+func (ck *TestNameChecker) addTest(code code) {
+	if !strings.HasPrefix(code.Func, "Test_") &&
+		code.Func != "Test" &&
+		ck.addError(
+			EName,
+			code,
+			"Test %q must start with %q.",
+			code.fullName(), "Test_") {
+
+		return
 	}
-	return b
+
+	parts := strings.SplitN(code.Func, "__", 2)
+	testeeName := strings.TrimPrefix(strings.TrimPrefix(parts[0], "Test"), "_")
+	descr := ""
+	if len(parts) > 1 {
+		if parts[1] == "" &&
+			ck.addError(
+				EName,
+				code,
+				"Test %q must have a nonempty description.",
+				code.fullName()) {
+			return
+		}
+		descr = parts[1]
+	}
+
+	code.order = ck.nextOrder()
+	ck.tests = append(ck.tests, &test{code, testeeName, descr, nil})
+}
+
+func (ck *TestNameChecker) nextOrder() int {
+	id := ck.order
+	ck.order++
+	return id
+}
+
+// relate connects the tests to their testees.
+func (ck *TestNameChecker) relate() {
+	testeesByPrefix := make(map[string]*testee)
+	for _, testee := range ck.testees {
+		prefix := join(testee.Type, "_", testee.Func)
+		testeesByPrefix[prefix] = testee
+	}
+
+	for _, test := range ck.tests {
+		test.testee = testeesByPrefix[test.testeeName]
+	}
+}
+
+func (ck *TestNameChecker) checkTests() {
+	for _, test := range ck.tests {
+		ck.checkTestFile(test)
+		ck.checkTestTestee(test)
+		ck.checkTestDescr(test)
+	}
+}
+
+func (ck *TestNameChecker) checkTestFile(test *test) {
+	testee := test.testee
+	if testee == nil || testee.file == test.file {
+		return
+	}
+
+	correctTestFile := strings.TrimSuffix(testee.file, ".go") + "_test.go"
+	if correctTestFile == test.file {
+		return
+	}
+
+	ck.addError(
+		EFile,
+		test.code,
+		"Test %q for %q must be in %s instead of %s.",
+		test.fullName(), testee.fullName(), correctTestFile, test.file)
+}
+
+func (ck *TestNameChecker) checkTestTestee(test *test) {
+	testee := test.testee
+	if testee != nil || test.testeeName == "" {
+		return
+	}
+
+	testeeName := strings.Replace(test.testeeName, "_", ".", -1)
+	ck.addError(
+		EMissingTestee,
+		test.code,
+		"Missing testee %q for test %q.",
+		testeeName, test.fullName())
+}
+
+// checkTestDescr ensures that the type or function name of the testee
+// does not accidentally end up in the description of the test. This could
+// happen if there is a double underscore instead of a single underscore.
+func (ck *TestNameChecker) checkTestDescr(test *test) {
+	testee := test.testee
+	if testee == nil || testee.isMethod() || !isCamelCase(test.descr) {
+		return
+	}
+
+	ck.addError(
+		EName,
+		testee.code,
+		"%s: Test description %q must not use CamelCase in the first word.",
+		test.fullName(), test.descr)
+}
+
+func (ck *TestNameChecker) checkTestees() {
+	tested := make(map[*testee]bool)
+	for _, test := range ck.tests {
+		tested[test.testee] = true
+	}
+
+	for _, testee := range ck.testees {
+		ck.checkTesteeTest(testee, tested)
+	}
+}
+
+func (ck *TestNameChecker) checkTesteeTest(testee *testee, tested map[*testee]bool) {
+	if tested[testee] || testee.isType() {
+		return
+	}
+
+	testName := "Test_" + join(testee.Type, "_", testee.Func)
+	ck.addError(
+		EMissingTest,
+		testee.code,
+		"Missing unit test %q for %q.",
+		testName, testee.fullName())
+}
+
+// isRelevant checks whether the given error is enabled.
+func (ck *TestNameChecker) isRelevant(filename, typeName, funcName string, e Error) bool {
+	mask := ^uint64(0)
+	for _, filter := range ck.filters {
+		if matches(filename, filter.filenames) &&
+			matches(typeName, filter.typeNames) &&
+			matches(funcName, filter.funcNames) {
+			mask = ck.errorsMask(mask, filter.errors...)
+		}
+	}
+	return mask&ck.errorsMask(0, e) != 0
+}
+
+func (ck *TestNameChecker) errorsMask(mask uint64, errors ...Error) uint64 {
+	for _, err := range errors {
+		if err == ENone {
+			mask = 0
+		} else if err == EAll {
+			mask = ^uint64(0)
+		} else if err < 0 {
+			mask &= ^(uint64(1) << -uint(err))
+		} else {
+			mask |= uint64(1) << uint(err)
+		}
+	}
+	return mask
+}
+
+// checkOrder ensures that the tests appear in the same order as their
+// counterparts in the main code.
+func (ck *TestNameChecker) checkOrder() {
+	maxOrderByFile := make(map[string]*test)
+
+	for _, test := range ck.tests {
+		testee := test.testee
+		if testee == nil {
+			continue
+		}
+
+		maxOrder := maxOrderByFile[testee.file]
+		if maxOrder == nil || testee.order > maxOrder.testee.order {
+			maxOrderByFile[testee.file] = test
+		}
+
+		if maxOrder != nil && testee.order < maxOrder.testee.order {
+			insertBefore := maxOrder
+			for _, before := range ck.tests {
+				if before.file == test.file && before.testee != nil && before.testee.order > testee.order {
+					insertBefore = before
+					break
+				}
+			}
+
+			ck.addError(
+				EOrder,
+				test.code,
+				"Test %q must be ordered before %q.",
+				test.fullName(), insertBefore.fullName())
+		}
+	}
+}
+
+func (ck *TestNameChecker) addError(e Error, c code, format string, args ...interface{}) bool {
+	relevant := ck.isRelevant(c.file, c.Type, c.Func, e)
+	if relevant {
+		ck.errors = append(ck.errors, fmt.Sprintf(format, args...))
+	}
+	return relevant
+}
+
+func (ck *TestNameChecker) print() {
+	for _, msg := range ck.errors {
+		_, _ = fmt.Fprintln(ck.out, msg)
+	}
+
+	n := len(ck.errors)
+	if n > 1 {
+		ck.errorf("%d errors.", n)
+	} else if n == 1 {
+		ck.errorf("%d error.", n)
+	}
+}
+
+type filter struct {
+	filenames string
+	typeNames string
+	funcNames string
+	errors    []Error
+}
+
+// testee is an element of the source code that can be tested.
+type testee struct {
+	code
+}
+
+type test struct {
+	code
+
+	testeeName string // The method name without the "Test_" prefix and description
+	descr      string // The part after the "__" in the method name
+	testee     *testee
+}
+
+// code is either a type, a function or a method.
+type code struct {
+	file  string // the file containing the code
+	Type  string // the type, e.g. MkLine
+	Func  string // the function or method name, e.g. Warnf
+	order int    // the relative order in the file
+}
+
+func (c *code) fullName() string { return join(c.Type, ".", c.Func) }
+func (c *code) isFunc() bool     { return c.Type == "" }
+func (c *code) isType() bool     { return c.Func == "" }
+func (c *code) isMethod() bool   { return c.Type != "" && c.Func != "" }
+
+func (c *code) isTest() bool {
+	return c.isTestScope() && strings.HasPrefix(c.Func, "Test")
+}
+func (c *code) isTestScope() bool {
+	return strings.HasSuffix(c.file, "_test.go")
 }
 
 func isCamelCase(str string) bool {
 	for i := 0; i+1 < len(str); i++ {
+		if str[i] == '_' {
+			return false
+		}
 		if unicode.IsLower(rune(str[i])) && unicode.IsUpper(rune(str[i+1])) {
 			return true
 		}
 	}
 	return false
+}
+
+func join(a, sep, b string) string {
+	if a == "" || b == "" {
+		sep = ""
+	}
+	return a + sep + b
+}
+
+func matches(subj string, pattern string) bool {
+	ok, err := path.Match(pattern, subj)
+	if err != nil {
+		panic(err)
+	}
+	return ok
+}
+
+// sortedKeys returns the sorted keys from an arbitrary map.
+func sortedKeys(m interface{}) []string {
+	var keys []string
+	for _, key := range reflect.ValueOf(m).MapKeys() {
+		keys = append(keys, key.Interface().(string))
+	}
+	sort.Strings(keys)
+	return keys
 }

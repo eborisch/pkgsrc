@@ -1,4 +1,4 @@
-# $NetBSD: Makefile,v 1.467 2019/11/03 12:12:56 nia Exp $
+# $NetBSD: Makefile,v 1.470 2019/11/17 17:56:48 nia Exp $
 #
 
 COMMENT=	Games
@@ -148,6 +148,7 @@ SUBDIR+=	gate88
 SUBDIR+=	gbrainy
 SUBDIR+=	gcompris
 SUBDIR+=	gemdropx
+SUBDIR+=	gemrb
 SUBDIR+=	genecys-client
 SUBDIR+=	genecys-data
 SUBDIR+=	ggz-client-libs
@@ -184,6 +185,7 @@ SUBDIR+=	imaze
 SUBDIR+=	ioquake3
 SUBDIR+=	ioquake3-pk3
 SUBDIR+=	ioquake3-raspberrypi
+SUBDIR+=	iortcw
 SUBDIR+=	ivan
 SUBDIR+=	jetpack
 SUBDIR+=	jin
@@ -294,6 +296,7 @@ SUBDIR+=	onscripter
 SUBDIR+=	openjk
 SUBDIR+=	openmortal
 SUBDIR+=	openmw
+SUBDIR+=	openrct2
 SUBDIR+=	openttd
 SUBDIR+=	openttd-data
 SUBDIR+=	orbital_eunuchs_sniper
