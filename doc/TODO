@@ -1,4 +1,4 @@
-$NetBSD: TODO,v 1.19464 2019/11/18 14:24:08 wiz Exp $
+$NetBSD: TODO,v 1.19468 2019/11/20 08:39:24 adam Exp $
 
 Suggested new packages
 ======================
@@ -617,6 +617,7 @@ For possible Perl packages updates, see http://www.NetBSD.org/~wiz/perl.html.
 	o ftplibpp-2.0.2
 	o fuse-archivemount-0.8.7
 	o fuse-bindfs-1.13.7
+	o fuse-ext2-0.0.10
 	o fuse-mp3fs-0.91 [needs fixes to work on NetBSD; started in wip]
 	o fvwm-devel-2.7.0
 	o fvwm2-themes-0.7.0
@@ -1445,9 +1446,6 @@ Suggested cleanups in pkgsrc
 	  sysutils/apcupsd, sysutils/gnometoaster,
 	  sysutils/mtoolsfm, sysutils/xnc
 
-	o Install documentation consistently into share/doc/${PKGBASE} or
-	  share/doc/${PKGNAME}, not share/doc/html.
-
 	o Convert packages to use VARBASE instead of hardcoding /var.
 
 	o Convert packages to use bsd.options.mk instead of various
@@ -1471,10 +1469,8 @@ Suggested cleanups in pkgsrc
 	  package.
 
 	o Run pkglint recursively against the whole tree and fix any
-	  issues identified. This adds very little value to pkgsrc other
-	  than ensuring the pkgsrc files are lint-free and the files pass
-	  the code review tool (pkglint). It can annoy some team members,
-	  so choose your commits wisely.
+	  issues identified. It can annoy some team members, so choose
+	  your commits wisely.
 
 	o Review bulk build reports and fix packages broken on any
 	  platform. Ideally, successful build counts would be similar
