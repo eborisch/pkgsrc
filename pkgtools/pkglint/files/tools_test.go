@@ -18,6 +18,37 @@ func (s *Suite) Test_Tool_UsableAtLoadTime(c *check.C) {
 	t.CheckEquals(run.UsableAtLoadTime(true), false)
 }
 
+func (s *Suite) Test_Tool_UsableAtLoadTime__pkgconfig_builtin_mk(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpCommandLine("-Wall", "--explain")
+	t.SetUpTool("tool1", "TOOL1", AfterPrefsMk)
+	t.SetUpTool("tool2", "TOOL2", AfterPrefsMk)
+	t.SetUpPackage("category/package")
+	t.CreateFileLines("mk/buildlink3/pkgconfig-builtin.mk")
+	t.FinishSetUp()
+
+	mklines := t.SetUpFileMkLines("category/package/filename.mk",
+		MkCvsID,
+		"",
+		"OUT!=\t${TOOL1} ${OUT}",
+		"",
+		".include \"../../mk/buildlink3/pkgconfig-builtin.mk\"",
+		"",
+		"OUT!=\t${TOOL2} ${OUT}")
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		"WARN: ~/category/package/filename.mk:3: " +
+			"To use the tool ${TOOL1} at load time, " +
+			"bsd.prefs.mk has to be included before.")
+	// Maybe an explanation might help here.
+	// There is surprisingly few feedback on any of the explanations
+	// though (about 0 in 10 years), therefore I don't even know
+	// whether anyone reads them.
+}
+
 func (s *Suite) Test_Tool_UsableAtRunTime(c *check.C) {
 	t := s.Init(c)
 
@@ -46,7 +77,7 @@ func (s *Suite) Test_Tools__USE_TOOLS_predefined_sed(c *check.C) {
 		"\t${SED} < input > output",
 		"\t${AWK} < input > output")
 
-	t.Main("-Wall", t.File("module.mk"))
+	t.Main("-Wall", "module.mk")
 
 	// Since this test doesn't load the usual tool definitions via
 	// G.Pkgsrc.loadTools, AWK is not known at all.
@@ -207,7 +238,6 @@ func (s *Suite) Test_Tools__builtin_mk(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpPkgsrc()
-	t.SetUpCommandLine("-Wall,no-space")
 	t.CreateFileLines("mk/tools/defaults.mk",
 		"TOOLS_CREATE+=  load",
 		"TOOLS_CREATE+=  run",
@@ -228,19 +258,19 @@ func (s *Suite) Test_Tools__builtin_mk(c *check.C) {
 	mklines := t.SetUpFileMkLines("category/package/builtin.mk",
 		MkCvsID,
 		"",
-		"VAR!=   ${ECHO} 'too early'",
-		"VAR!=   ${LOAD} 'too early'",
-		"VAR!=   ${RUN_CMD} 'never allowed'",
-		"VAR!=   ${NOWHERE} 'never allowed'",
+		"VAR!=\t${ECHO} 'too early'",
+		"VAR!=\t${LOAD} 'too early'",
+		"VAR!=\t${RUN_CMD} 'never allowed'",
+		"VAR!=\t${NOWHERE} 'never allowed'",
 		"",
 		".include \"../../mk/buildlink3/bsd.builtin.mk\"",
 		"",
-		"VAR!=   ${ECHO} 'valid'",
-		"VAR!=   ${LOAD} 'valid'",
-		"VAR!=   ${RUN_CMD} 'never allowed'",
-		"VAR!=   ${NOWHERE} 'never allowed'",
+		"VAR!=\t${ECHO} 'valid'",
+		"VAR!=\t${LOAD} 'valid'",
+		"VAR!=\t${RUN_CMD} 'never allowed'",
+		"VAR!=\t${NOWHERE} 'never allowed'",
 		"",
-		"VAR!=   ${VAR}")
+		"VAR!=\t${VAR}")
 
 	mklines.Check()
 
@@ -257,7 +287,6 @@ func (s *Suite) Test_Tools__implicit_definition_in_bsd_pkg_mk(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpPkgsrc()
-	t.SetUpCommandLine("-Wall,no-space")
 	t.CreateFileLines("mk/tools/defaults.mk",
 		MkCvsID) // None
 	t.CreateFileLines("mk/bsd.prefs.mk",
@@ -278,7 +307,6 @@ func (s *Suite) Test_Tools__both_prefs_and_pkg_mk(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpPkgsrc()
-	t.SetUpCommandLine("-Wall,no-space")
 	t.CreateFileLines("mk/tools/defaults.mk",
 		MkCvsID)
 	t.CreateFileLines("mk/bsd.prefs.mk",
@@ -297,7 +325,6 @@ func (s *Suite) Test_Tools__tools_having_the_same_variable_name(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpPkgsrc()
-	t.SetUpCommandLine("-Wall,no-space")
 	t.CreateFileLines("mk/tools/defaults.mk",
 		"_TOOLS_VARNAME.awk=     AWK",
 		"_TOOLS_VARNAME.gawk=    AWK",

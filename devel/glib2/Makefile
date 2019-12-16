@@ -1,4 +1,4 @@
-# $NetBSD: Makefile,v 1.263 2019/11/14 11:40:30 wiz Exp $
+# $NetBSD: Makefile,v 1.265 2019/11/28 09:23:32 bsiegert Exp $
 
 .include "Makefile.common"
 
@@ -13,7 +13,8 @@ MESON_ARGS+=	-Dlibmount=false
 
 MAKE_ENV+=	LD_LIBRARY_PATH=${WRKSRC}/output/gio:${WRKSRC}/output/glib:${WRKSRC}/output/gobject:${WRKSRC}/output/gmodule
 
-LDFLAGS.SunOS+=		-lintl -lnsl
+CPPFLAGS.SunOS+=	-D_XOPEN_SOURCE=600 -D__EXTENSIONS__
+LDFLAGS.SunOS+=		-liconv -lintl -lnsl -lsocket
 
 REPLACE_PYTHON+=	gio/gio-querymodules-wrapper.py
 REPLACE_PYTHON+=	gio/tests/gengiotypefuncs.py
@@ -61,6 +62,9 @@ PKGCONFIG_OVERRIDE_STAGE=	post-configure
 # to run gdbus-codegen to generate gdbus-daemon-generated.{h,c}
 TOOL_DEPENDS+=		${PYPKGPREFIX}-expat-[0-9]*:../../textproc/py-expat
 PYTHON_FOR_BUILD_ONLY=	yes
+
+post-extract:
+	${CHMOD} +x ${WRKSRC}/gio/tests/gengiotypefuncs.py
 
 .include "../../converters/libiconv/buildlink3.mk"
 .include "../../devel/gettext-lib/buildlink3.mk"

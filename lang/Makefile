@@ -1,4 +1,4 @@
-# $NetBSD: Makefile,v 1.528 2019/11/14 21:20:48 rillig Exp $
+# $NetBSD: Makefile,v 1.531 2019/12/15 17:57:14 taca Exp $
 #
 
 COMMENT=	Programming languages
@@ -95,6 +95,7 @@ SUBDIR+=	go-hcl
 SUBDIR+=	go110
 SUBDIR+=	go111
 SUBDIR+=	go112
+SUBDIR+=	go113
 SUBDIR+=	go14
 SUBDIR+=	go19
 SUBDIR+=	gpc
@@ -158,7 +159,8 @@ SUBDIR+=	newsqueak
 SUBDIR+=	nhc98
 SUBDIR+=	nim
 SUBDIR+=	nodejs
-SUBDIR+=	nodejs6
+SUBDIR+=	nodejs10
+SUBDIR+=	nodejs12
 SUBDIR+=	nodejs8
 SUBDIR+=	npm
 SUBDIR+=	nqp
@@ -192,6 +194,7 @@ SUBDIR+=	php56
 SUBDIR+=	php71
 SUBDIR+=	php72
 SUBDIR+=	php73
+SUBDIR+=	php74
 SUBDIR+=	picoc
 SUBDIR+=	pict
 SUBDIR+=	polyml

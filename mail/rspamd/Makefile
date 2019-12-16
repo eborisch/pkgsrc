@@ -1,6 +1,6 @@
-# $NetBSD: Makefile,v 1.58 2019/11/17 11:11:21 wiz Exp $
+# $NetBSD: Makefile,v 1.60 2019/12/08 09:32:05 triaxx Exp $
 
-DISTNAME=	rspamd-2.1
+DISTNAME=	rspamd-2.2
 CATEGORIES=	mail
 MASTER_SITES=	${MASTER_SITE_GITHUB:=vstakhov/}
 
@@ -61,6 +61,9 @@ CMAKE_ARGS+=	-DENABLE_SQLITE=ON
 # Torch requires LuaJIT2, but LuaJIT2 only supports Lua 5.1
 CMAKE_ARGS+=	-DENABLE_LUAJIT=OFF
 CMAKE_ARGS+=	-DENABLE_TORCH=OFF
+
+# Assumes inotify == Linux
+CMAKE_ARGS.SunOS+=	-DHAVE_INOTIFY_INIT=NO
 
 REPLACE_PERL+=	utils/rspamd_stats.pl
 

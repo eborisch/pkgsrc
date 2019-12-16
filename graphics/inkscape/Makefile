@@ -1,7 +1,7 @@
-# $NetBSD: Makefile,v 1.197 2019/11/07 12:38:06 wiz Exp $
+# $NetBSD: Makefile,v 1.199 2019/12/12 12:00:22 jperkin Exp $
 
 DISTNAME=	inkscape-0.92.4
-PKGREVISION=	8
+PKGREVISION=	9
 CATEGORIES=	graphics
 MASTER_SITES=	https://media.inkscape.org/dl/resources/file/
 EXTRACT_SUFX=	.tar.bz2
@@ -70,6 +70,8 @@ CHECK_INTERPRETER_SKIP+=	share/inkscape/extensions/genpofiles.sh
 CHECK_INTERPRETER_SKIP+=	share/inkscape/extensions/simplepath.rb
 CHECK_PORTABILITY_SKIP+=	packaging/macosx/Resources/bin/inkscape
 CHECK_PORTABILITY_SKIP+=	packaging/macosx/ScriptExec/launcher-quartz-no-macintegration.sh
+
+CMAKE_ARGS+=	-DPACKAGE_LOCALE_DIR=${PREFIX}/${PKGLOCALEDIR}/locale
 
 .include "options.mk"
 

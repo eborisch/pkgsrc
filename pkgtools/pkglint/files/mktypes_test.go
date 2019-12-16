@@ -36,17 +36,7 @@ func (MkTokenBuilder) VarUse(varname string, modifiers ...string) *MkVarUse {
 	for _, modifier := range modifiers {
 		mods = append(mods, MkVarUseModifier{modifier})
 	}
-	return &MkVarUse{varname, mods}
-}
-
-// AddCommand adds a command directly to a list of commands,
-// creating all the intermediate nodes for the syntactic representation.
-// As soon as that representation is replaced with a semantic representation,
-// this method should no longer be necessary.
-func (list *MkShList) AddCommand(command *MkShCommand) *MkShList {
-	pipeline := NewMkShPipeline(false, []*MkShCommand{command})
-	andOr := NewMkShAndOr(pipeline)
-	return list.AddAndOr(andOr)
+	return NewMkVarUse(varname, mods...)
 }
 
 func (s *Suite) Test_MkVarUseModifier_MatchSubst(c *check.C) {
@@ -150,6 +140,63 @@ func (s *Suite) Test_MkVarUseModifier_Subst__C_with_complex_replacement(c *check
 	t.CheckEquals(result, "")
 }
 
+func (s *Suite) Test_MkVarUseModifier_Subst__S_dollar_at(c *check.C) {
+	t := s.Init(c)
+
+	mod := MkVarUseModifier{"S/$@/replaced/"}
+
+	result, ok := mod.Subst("The target")
+
+	// As of December 2019, nothing is substituted. If pkglint should ever
+	// handle variables in the modifier, this test would been to provide a
+	// context in which to resolve the variables. If that happens, the
+	// .TARGET variable needs to be set to "target".
+	t.CheckEquals(ok, true)
+	t.CheckEquals(result, "The target")
+}
+
+func (s *Suite) Test_MkVarUseModifier_EvalSubst(c *check.C) {
+	t := s.Init(c)
+
+	test := func(s string, left bool, from string, right bool, to string, flags string, ok bool, result string) {
+		mod := MkVarUseModifier{}
+
+		actualOk, actual := mod.EvalSubst(s, left, from, right, to, flags)
+
+		t.CheckEquals(actualOk, ok)
+		t.CheckEquals(actual, result)
+	}
+
+	// Replace anywhere
+	test("pkgname", false, "kgna", false, "ri", "", true, "prime")
+	test("pkgname", false, "pkgname", false, "replacement", "", true, "replacement")
+	test("aaaaaaa", false, "a", false, "b", "", true, "baaaaaa")
+
+	// Anchored at the beginning
+	test("pkgname", true, "kgna", false, "ri", "", true, "pkgname")
+	test("pkgname", true, "pkgname", false, "replacement", "", true, "replacement")
+
+	// Anchored at the end
+	test("pkgname", false, "kgna", true, "ri", "", true, "pkgname")
+	test("pkgname", false, "pkgname", true, "replacement", "", true, "replacement")
+
+	// Anchored at both sides
+	test("pkgname", true, "kgna", true, "ri", "", true, "pkgname")
+	test("pkgname", false, "pkgname", false, "replacement", "", true, "replacement")
+
+	// Replace all
+	test("aaaaa", false, "a", false, "b", "g", true, "bbbbb")
+	test("aaaaa", true, "a", false, "b", "g", true, "baaaa")
+	test("aaaaa", false, "a", true, "b", "g", true, "aaaab")
+	test("aaaaa", true, "a", true, "b", "g", true, "aaaaa")
+
+	// Replacements using variables are trickier to get right.
+	test("anything", false, "${VAR}", false, "replacement", "", false, "")
+	test("anything", false, "pattern", false, "${VAR}", "", false, "")
+	test("echo $$$$", false, "$$", false, "dollar", "", true, "echo dollar$$")
+	test("echo $$$$", false, "$$", false, "dollar", "g", true, "echo dollardollar")
+}
+
 func (s *Suite) Test_MkVarUseModifier_MatchMatch(c *check.C) {
 	t := s.Init(c)
 
@@ -175,29 +222,40 @@ func (s *Suite) Test_MkVarUseModifier_MatchMatch(c *check.C) {
 	test("Npattern", false, "pattern", true)
 }
 
-func (s *Suite) Test_MkVarUseModifier_ChangesWords(c *check.C) {
+func (s *Suite) Test_MkVarUseModifier_ChangesList(c *check.C) {
 	t := s.Init(c)
 
 	test := func(modifier string, changes bool) {
 		mod := MkVarUseModifier{modifier}
-		t.CheckEquals(mod.ChangesWords(), changes)
+		t.CheckEquals(mod.ChangesList(), changes)
 	}
 
+	test("C,from,to,", true)
 	test("E", false)
-	test("R", false)
+	test("H", false)
+
+	// The :M and :N modifiers may reduce the number of words in a
+	// variable, but they don't change the interpretation from a list
+	// to a non-list.
 	test("Mpattern", false)
 	test("Npattern", false)
-	test("S,from,to,", true)
-	test("C,from,to,", true)
-	test("tl", false)
-	test("tu", false)
-	test("sh", true)
 
-	test("unknown", true)
+	test("O", false)
+	test("Q", true)
+	test("R", false)
+	test("S,from,to,", true)
+	test("T", false)
+	test("invalid", true)
+	test("sh", true)
+	test("tl", false)
+	test("tW", true)
+	test("tu", false)
+	test("tw", true)
 }
 
-// Ensures that ChangesWords cannot be called with an empty string as modifier.
-func (s *Suite) Test_MkVarUseModifier_ChangesWords__empty(c *check.C) {
+// Ensures that ChangesList cannot be called with an empty string as modifier.
+// Therefore it is safe to index text[0] without a preceding length check.
+func (s *Suite) Test_MkVarUseModifier_ChangesList__empty(c *check.C) {
 	t := s.Init(c)
 
 	mkline := t.NewMkLine("filename.mk", 123, "\t${VAR:}")
@@ -206,7 +264,7 @@ func (s *Suite) Test_MkVarUseModifier_ChangesWords__empty(c *check.C) {
 	mkline.ForEachUsed(func(varUse *MkVarUse, time VucTime) {
 		n += 100
 		for _, mod := range varUse.modifiers {
-			mod.ChangesWords()
+			mod.ChangesList()
 			n++
 		}
 	})
@@ -220,7 +278,7 @@ func (s *Suite) Test_MkVarUse_Mod(c *check.C) {
 
 	test := func(varUseText string, mod string) {
 		line := t.NewLine("filename.mk", 123, "")
-		varUse := NewMkParser(line, varUseText).VarUse()
+		varUse := NewMkLexer(varUseText, line).VarUse()
 		t.CheckOutputEmpty()
 		t.CheckEquals(varUse.Mod(), mod)
 	}

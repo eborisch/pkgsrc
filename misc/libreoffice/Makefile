@@ -1,4 +1,4 @@
-# $NetBSD: Makefile,v 1.213 2019/11/15 13:26:02 ryoon Exp $
+# $NetBSD: Makefile,v 1.215 2019/12/01 04:59:43 ryoon Exp $
 
 VERREL=		6.3.3
 VERRC=		2
@@ -33,6 +33,9 @@ GCC_REQD+=	7
 
 .include "../../mk/bsd.prefs.mk"
 
+CHECK_BUILTIN.freetype2:=	yes
+.include "../../graphics/freetype2/builtin.mk"
+CHECK_BUILTIN.freetype2:=	no
 .if !empty(USE_BUILTIN.freetype2:M[Yy][Ee][Ss]) && \
 	!empty(BUILTIN_VERSION.freetype2:M2.10.0)
 CFLAGS+=			-D_FT_CONST=
@@ -280,7 +283,7 @@ pre-configure: provide-python3
 .PHONY: provide-python3
 provide-python3:
 	# install phase uses python3 command
-	${LN} -s ${PYTHONBIN} "${BUILDLINK_DIR}/bin/python3"
+	[ -h "${BUILDLINK_DIR}/bin/python3" ] || ${LN} -s ${PYTHONBIN} "${BUILDLINK_DIR}/bin/python3"
 
 do-install:
 	cd ${WRKSRC} && make DESTDIR="${DESTDIR}" PREFIXDIR="${PREFIX}" distro-pack-install

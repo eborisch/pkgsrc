@@ -252,7 +252,6 @@ func (s *Suite) Test_CheckLinesOptionsMk__conditionals(c *check.C) {
 func (s *Suite) Test_CheckLinesOptionsMk(c *check.C) {
 	t := s.Init(c)
 
-	t.SetUpCommandLine("-Wall,no-space")
 	t.SetUpVartypes()
 	t.SetUpOption("mc-charset", "")
 	t.SetUpOption("mysql", "")
@@ -268,17 +267,17 @@ func (s *Suite) Test_CheckLinesOptionsMk(c *check.C) {
 	mklines := t.SetUpFileMkLines("category/package/options.mk",
 		MkCvsID,
 		"",
-		"PKG_OPTIONS_VAR=                PKG_OPTIONS.mc",
-		"PKG_OPTIONS_REQUIRED_GROUPS=    screen",
-		"PKG_OPTIONS_GROUP.screen=       ncurses slang",
-		"PKG_SUPPORTED_OPTIONS=          mc-charset x11 lang-${l} negative",
-		"PKG_SUGGESTED_OPTIONS=          mc-charset slang",
-		"PKG_OPTIONS_NONEMPTY_SETS+=     db",
-		"PKG_OPTIONS_SET.db=             mysql sqlite",
+		"PKG_OPTIONS_VAR=\t\tPKG_OPTIONS.mc",
+		"PKG_OPTIONS_REQUIRED_GROUPS=\tscreen",
+		"PKG_OPTIONS_GROUP.screen=\tncurses slang",
+		"PKG_SUPPORTED_OPTIONS=\t\tmc-charset x11 lang-${l} negative",
+		"PKG_SUGGESTED_OPTIONS=\t\tmc-charset slang",
+		"PKG_OPTIONS_NONEMPTY_SETS+=\tdb",
+		"PKG_OPTIONS_SET.db=\t\tmysql sqlite",
 		"",
 		".include \"../../mk/bsd.options.mk\"",
 		"",
-		"PKGNAME?=  default-pkgname-1.",
+		"PKGNAME?=\tdefault-pkgname-1.",
 		"",
 		".if !empty(PKG_OPTIONS:Mx11)",
 		".endif",
@@ -306,7 +305,7 @@ func (s *Suite) Test_CheckLinesOptionsMk(c *check.C) {
 	t.CheckOutputLines(
 		"WARN: ~/category/package/options.mk:6: l is used but not defined.",
 		"WARN: ~/category/package/options.mk:18: Unknown option \"undeclared\".",
-		"NOTE: ~/category/package/options.mk:21: "+
+		"WARN: ~/category/package/options.mk:21: "+
 			"The positive branch of the .if/.else should be the one where the option is set.",
 		// TODO: The diagnostics should appear in the correct order.
 		"WARN: ~/category/package/options.mk:6: "+
@@ -323,7 +322,6 @@ func (s *Suite) Test_CheckLinesOptionsMk(c *check.C) {
 func (s *Suite) Test_CheckLinesOptionsMk__unexpected_line(c *check.C) {
 	t := s.Init(c)
 
-	t.SetUpCommandLine("-Wno-space")
 	t.SetUpVartypes()
 
 	t.CreateFileLines("mk/bsd.options.mk",
@@ -332,7 +330,7 @@ func (s *Suite) Test_CheckLinesOptionsMk__unexpected_line(c *check.C) {
 	mklines := t.SetUpFileMkLines("category/package/options.mk",
 		MkCvsID,
 		"",
-		"PKG_OPTIONS_VAR=                PKG_OPTIONS.mc",
+		"PKG_OPTIONS_VAR=\tPKG_OPTIONS.mc",
 		"",
 		"pre-configure:",
 		"\techo \"In the pre-configure stage.\"")
@@ -340,29 +338,33 @@ func (s *Suite) Test_CheckLinesOptionsMk__unexpected_line(c *check.C) {
 	CheckLinesOptionsMk(mklines)
 
 	t.CheckOutputLines(
-		"ERROR: ~/category/package/options.mk: " +
+		"WARN: ~/category/package/options.mk:6: "+
+			"Unknown shell command \"echo\".",
+		"ERROR: ~/category/package/options.mk: "+
 			"Each options.mk file must .include \"../../mk/bsd.options.mk\".")
 }
 
 func (s *Suite) Test_CheckLinesOptionsMk__malformed_condition(c *check.C) {
 	t := s.Init(c)
 
-	t.SetUpCommandLine("-Wno-space")
-	t.SetUpVartypes()
+	t.SetUpPkgsrc()
+	t.Chdir(".")
 	t.SetUpOption("mc-charset", "")
 	t.SetUpOption("ncurses", "")
 	t.SetUpOption("slang", "")
 	t.SetUpOption("x11", "")
-
 	t.CreateFileLines("mk/bsd.options.mk",
 		MkCvsID)
+	t.FinishSetUp()
 
 	mklines := t.SetUpFileMkLines("category/package/options.mk",
 		MkCvsID,
 		"",
-		"PKG_OPTIONS_VAR=                PKG_OPTIONS.mc",
-		"PKG_SUPPORTED_OPTIONS=          # none",
-		"PKG_SUGGESTED_OPTIONS=          # none",
+		"PKG_OPTIONS_VAR=\t\tPKG_OPTIONS.mc",
+		"PKG_SUPPORTED_OPTIONS=\t\t# none",
+		"PKG_SUGGESTED_OPTIONS=\t\t# none",
+		"",
+		".include \"../../mk/bsd.fast.prefs.mk\"",
 		"",
 		"# Comments and conditionals are allowed at this point.",
 		".if ${OPSYS} == NetBSD",
@@ -376,7 +378,7 @@ func (s *Suite) Test_CheckLinesOptionsMk__malformed_condition(c *check.C) {
 	CheckLinesOptionsMk(mklines)
 
 	t.CheckOutputLines(
-		"WARN: ~/category/package/options.mk:13: Invalid condition, unrecognized part: \"${OPSYS} == 'Darwin'\".")
+		"WARN: category/package/options.mk:15: Invalid condition, unrecognized part: \"${OPSYS} == 'Darwin'\".")
 }
 
 func (s *Suite) Test_CheckLinesOptionsMk__PLIST_VARS_based_on_PKG_SUPPORTED_OPTIONS(c *check.C) {
@@ -571,6 +573,11 @@ func (s *Suite) Test_CheckLinesOptionsMk__partly_indirect(c *check.C) {
 		".include \"options.mk\"")
 	t.CreateFileLines("category/package/options.mk",
 		MkCvsID,
+		"",
+		"# Including bsd.prefs.mk is not necessary here since the OPSYS",
+		"# in PKG_SUPPORTED_OPTIONS is only evaluated lazily inside",
+		"# bsd.options.mk, at which point bsd.prefs.mk will be included",
+		"# as well.",
 		"",
 		"PKG_OPTIONS_VAR=\tPKG_OPTIONS.package",
 		"PKG_SUPPORTED_OPTIONS=\tgeneric-${OPSYS}",

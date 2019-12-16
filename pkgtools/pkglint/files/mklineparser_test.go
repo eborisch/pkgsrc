@@ -146,56 +146,6 @@ func (s *Suite) Test_MkLineParser_parseVarassign__leading_space(c *check.C) {
 		"WARN: rubyversion.mk:427: Makefile lines should not start with space characters.")
 }
 
-func (s *Suite) Test_MkLineParser_parseVarassign__space_around_operator(c *check.C) {
-	t := s.Init(c)
-
-	t.SetUpCommandLine("--show-autofix", "--source")
-	t.NewMkLine("test.mk", 101,
-		"pkgbase = package")
-
-	t.CheckOutputLines(
-		"NOTE: test.mk:101: Unnecessary space after variable name \"pkgbase\".",
-		"AUTOFIX: test.mk:101: Replacing \"pkgbase =\" with \"pkgbase=\".",
-		"-\tpkgbase = package",
-		"+\tpkgbase= package")
-}
-
-func (s *Suite) Test_MkLineParser_parseVarassign__autofix_space_after_varname(c *check.C) {
-	t := s.Init(c)
-
-	t.SetUpCommandLine("-Wspace")
-	filename := t.CreateFileLines("Makefile",
-		MkCvsID,
-		"VARNAME +=\t${VARNAME}",
-		"VARNAME+ =\t${VARNAME+}",
-		"VARNAME+ +=\t${VARNAME+}",
-		"VARNAME+ ?=\t${VARNAME}",
-		"pkgbase := pkglint")
-
-	CheckFileMk(filename)
-
-	t.CheckOutputLines(
-		"NOTE: ~/Makefile:2: Unnecessary space after variable name \"VARNAME\".",
-
-		// The assignment operators other than = and += cannot lead to ambiguities.
-		"NOTE: ~/Makefile:5: Unnecessary space after variable name \"VARNAME+\".")
-
-	t.SetUpCommandLine("-Wspace", "--autofix")
-
-	CheckFileMk(filename)
-
-	t.CheckOutputLines(
-		"AUTOFIX: ~/Makefile:2: Replacing \"VARNAME +=\" with \"VARNAME+=\".",
-		"AUTOFIX: ~/Makefile:5: Replacing \"VARNAME+ ?=\" with \"VARNAME+?=\".")
-	t.CheckFileLines("Makefile",
-		MkCvsID+"",
-		"VARNAME+=\t${VARNAME}",
-		"VARNAME+ =\t${VARNAME+}",
-		"VARNAME+ +=\t${VARNAME+}",
-		"VARNAME+?=\t${VARNAME}",
-		"pkgbase := pkglint")
-}
-
 func (s *Suite) Test_MkLineParser_parseVarassign__append(c *check.C) {
 	t := s.Init(c)
 
@@ -456,6 +406,88 @@ func (s *Suite) Test_MkLineParser_MatchVarassign(c *check.C) {
 		"")
 }
 
+func (s *Suite) Test_MkLineParser_fixSpaceAfterVarname__show_autofix(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpCommandLine("--show-autofix", "--source")
+	t.NewMkLine("test.mk", 101,
+		"pkgbase = package")
+
+	t.CheckOutputLines(
+		"NOTE: test.mk:101: Unnecessary space after variable name \"pkgbase\".",
+		"AUTOFIX: test.mk:101: Replacing \"pkgbase = \" with \"pkgbase=  \".",
+		"-\tpkgbase = package",
+		"+\tpkgbase=  package")
+}
+
+func (s *Suite) Test_MkLineParser_fixSpaceAfterVarname__autofix(c *check.C) {
+	t := s.Init(c)
+
+	filename := t.CreateFileLines("Makefile",
+		MkCvsID,
+		"VARNAME +=\t${VARNAME}",
+		"VARNAME+ =\t${VARNAME+}",
+		"VARNAME+ +=\t${VARNAME+}",
+		"VARNAME+ ?=\t${VARNAME}",
+		"pkgbase := pkglint")
+
+	CheckFileMk(filename)
+
+	t.CheckOutputLines(
+		"NOTE: ~/Makefile:2: Unnecessary space after variable name \"VARNAME\".",
+
+		// The assignment operators other than = and += cannot lead to ambiguities.
+		"NOTE: ~/Makefile:5: Unnecessary space after variable name \"VARNAME+\".",
+
+		"WARN: ~/Makefile:5: "+
+			"Please include \"../../mk/bsd.prefs.mk\" before using \"?=\".")
+
+	t.SetUpCommandLine("-Wall", "--autofix")
+
+	CheckFileMk(filename)
+
+	t.CheckOutputLines(
+		"AUTOFIX: ~/Makefile:2: Replacing \"VARNAME +=\\t\" with \"VARNAME+=\\t\".",
+		"AUTOFIX: ~/Makefile:5: Replacing \"VARNAME+ ?=\\t\" with \"VARNAME+?=\\t\".")
+	t.CheckFileLines("Makefile",
+		MkCvsID+"",
+		"VARNAME+=\t${VARNAME}",
+		"VARNAME+ =\t${VARNAME+}",
+		"VARNAME+ +=\t${VARNAME+}",
+		"VARNAME+?=\t${VARNAME}",
+		"pkgbase := pkglint")
+}
+
+func (s *Suite) Test_MkLineParser_fixSpaceAfterVarname__preserve_alignment(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpCommandLine("--show-autofix")
+
+	test := func(before, after string, diagnostics ...string) {
+
+		doTest := func(autofix bool) {
+			mkline := t.NewMkLine("filename.mk", 123, before)
+			t.CheckEquals(mkline.Text, condStr(autofix, after, before))
+		}
+
+		t.ExpectDiagnosticsAutofix(doTest, diagnostics...)
+	}
+
+	test(
+		"V    +=         ${VARNAME}",
+		"V+=\t\t${VARNAME}",
+
+		"NOTE: filename.mk:123: Unnecessary space after variable name \"V\".",
+		"AUTOFIX: filename.mk:123: Replacing \"V    +=         \" with \"V+=\\t\\t\".")
+
+	test(
+		"V    +=     ${VARNAME}",
+		"V+=\t    ${VARNAME}",
+
+		"NOTE: filename.mk:123: Unnecessary space after variable name \"V\".",
+		"AUTOFIX: filename.mk:123: Replacing \"V    +=     \" with \"V+=\\t    \".")
+}
+
 func (s *Suite) Test_MkLineParser_parseShellcmd(c *check.C) {
 	t := s.Init(c)
 
@@ -543,7 +575,7 @@ func (s *Suite) Test_MkLineParser_parseInclude(c *check.C) {
 	t.CheckEquals(mkline.IsInclude(), true)
 	t.CheckEquals(mkline.Indent(), "    ")
 	t.CheckEquals(mkline.MustExist(), true)
-	t.CheckEquals(mkline.IncludedFile(), "../../mk/bsd.prefs.mk")
+	t.CheckEquals(mkline.IncludedFile(), NewRelPathString("../../mk/bsd.prefs.mk"))
 
 	t.CheckEquals(mkline.IsSysinclude(), false)
 }
@@ -557,7 +589,7 @@ func (s *Suite) Test_MkLineParser_parseSysinclude(c *check.C) {
 	t.CheckEquals(mkline.IsSysinclude(), true)
 	t.CheckEquals(mkline.Indent(), "    ")
 	t.CheckEquals(mkline.MustExist(), true)
-	t.CheckEquals(mkline.IncludedFile(), "subdir.mk")
+	t.CheckEquals(mkline.IncludedFile(), NewRelPathString("subdir.mk"))
 
 	t.CheckEquals(mkline.IsInclude(), false)
 }
@@ -911,7 +943,7 @@ func (s *Suite) Test_MkLineParser_split(c *check.C) {
 			comment:            " comment after spaces",
 		})
 
-	// FIXME: This theoretical edge case is interpreted differently
+	// XXX: This theoretical edge case is interpreted differently
 	//  between bmake and pkglint. Pkglint treats the # as a comment,
 	//  while bmake interprets it as a regular character.
 	test("\\[#",
@@ -1009,7 +1041,7 @@ func (s *Suite) Test_MkLineParser_split__unclosed_varuse(c *check.C) {
 					"EGDIR/apparmor.d ${EGDIR/dbus-1/system.d ${EGDIR/pam.d")),
 			"",
 			false,
-			false,
+			"",
 			"",
 		},
 

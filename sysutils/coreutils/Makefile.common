@@ -1,9 +1,9 @@
-# $NetBSD: Makefile.common,v 1.20 2019/11/04 21:28:43 rillig Exp $
+# $NetBSD: Makefile.common,v 1.22 2019/12/15 11:49:28 mef Exp $
 #
 # used by sysutils/coreutils/Makefile
 # used by misc/gnuls/Makefile
 
-DISTNAME=	coreutils-8.29
+DISTNAME=	coreutils-8.31
 CATEGORIES=	sysutils
 MASTER_SITES=	${MASTER_SITE_GNU:=coreutils/}
 EXTRACT_SUFX=	.tar.xz
@@ -48,7 +48,7 @@ CFLAGS+=		-O2
 
 # clang on SunOS parses -errwarn as an -e entry point argument to the linker,
 # which ignores it as it's a duplicate argument.  Turn it off explicitly.
-.if ${PKGSRC_COMPILER} == "clang"
+.if ${PKGSRC_COMPILER:Mclang}
 CONFIGURE_ENV.SunOS+=	gl_cv_warn_c__errwarn=no
 .endif
 

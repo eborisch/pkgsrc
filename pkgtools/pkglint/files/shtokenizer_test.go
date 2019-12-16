@@ -41,7 +41,7 @@ func (s *Suite) Test_ShTokenizer__examples_from_fuzzing(c *check.C) {
 		"WARN: filename.mk:2: Pkglint ShellLine.CheckShellCommand: splitIntoShellTokens couldn't parse \"\\\"`'`y\"")
 
 	// Covers shAtomDquotBackt: return nil
-	// FIXME: Pkglint must parse unescaped dollar in the same way, everywhere.
+	// XXX: Pkglint should parse unescaped dollar in the same way, everywhere.
 	test(
 		"\"`$|",
 		"WARN: filename.mk:2: Internal pkglint error in ShTokenizer.ShAtom at \"$|\" (quoting=db).",
@@ -49,7 +49,7 @@ func (s *Suite) Test_ShTokenizer__examples_from_fuzzing(c *check.C) {
 		"WARN: filename.mk:2: Internal pkglint error in MkLine.Tokenize at \"$|\".")
 
 	// Covers shAtomDquotBacktDquot: return nil
-	// FIXME: Pkglint must support unlimited nesting.
+	// XXX: Pkglint should support unlimited nesting.
 	test(
 		"\"`\"`",
 		"WARN: filename.mk:2: Internal pkglint error in ShTokenizer.ShAtom at \"`\" (quoting=dbd).",
@@ -90,9 +90,13 @@ func (s *Suite) Test_ShTokenizer__fuzzing(c *check.C) {
 	fuzzer.Char("\"'`$();|_#", 10)
 	fuzzer.Range('a', 'z', 5)
 
+	// This "real" line is necessary because the autofix
+	// in MkParser.varUseBrace checks this.
+	line := t.NewLine("Makefile", 1, "\t:")
+
 	defer fuzzer.CheckOk()
 	for i := 0; i < 1000; i++ {
-		tokenizer := NewShTokenizer(dummyLine, fuzzer.Generate(50), false)
+		tokenizer := NewShTokenizer(line, fuzzer.Generate(50))
 		tokenizer.ShAtoms()
 		t.Output() // Discard the output, only react on panics.
 	}
@@ -105,7 +109,8 @@ func (s *Suite) Test_ShTokenizer_ShAtom(c *check.C) {
 	// testRest ensures that the given string is parsed to the expected
 	// atoms, and returns the remaining text.
 	testRest := func(s string, expectedAtoms []*ShAtom, expectedRest string) {
-		p := NewShTokenizer(dummyLine, s, false)
+		line := t.NewLine("filename.mk", 1, "")
+		p := NewShTokenizer(line, s)
 
 		actualAtoms := p.ShAtoms()
 
@@ -506,13 +511,36 @@ func (s *Suite) Test_ShTokenizer_ShAtom(c *check.C) {
 		subshBackt(text("nested-subshell")),
 		subsh(operator("`")),
 		operator(")"))
+
+	// Subshell with unbalanced parentheses, taken from src/build.sh,
+	// around line 160. Many shells (and pkglint) fail this test,
+	// therefore just don't write code like this.
+	test("var=$$(case x in x) still-subshell;; esac);",
+		text("var="), subsh(subshell),
+		subsh(text("case")), subsh(space), subsh(text("x")), subsh(space),
+		subsh(text("in")), subsh(space), subsh(text("x")),
+		// XXX: The parenthesis is for the case pattern, not the end of the subshell.
+		operator(")"), space,
+		text("still-subshell"), operator(";;"), space,
+		text("esac"), operator(")"), operator(";"))
+
+	testRest("`echo \\${VAR}`",
+		atoms(
+			backt(text("`")),
+			backt(text("echo")),
+			backt(space)),
+		"\\${VAR}`")
+	t.CheckOutputLines(
+		"WARN: filename.mk:1: Internal pkglint error " +
+			"in ShTokenizer.ShAtom at \"\\\\${VAR}`\" (quoting=b).")
 }
 
 func (s *Suite) Test_ShTokenizer_ShAtom__quoting(c *check.C) {
 	t := s.Init(c)
 
 	test := func(input, expectedOutput string) {
-		p := NewShTokenizer(dummyLine, input, false)
+		line := t.NewLine("filename.mk", 1, "")
+		p := NewShTokenizer(line, input)
 		q := shqPlain
 		result := ""
 		for {
@@ -544,11 +572,26 @@ func (s *Suite) Test_ShTokenizer_ShAtom__quoting(c *check.C) {
 	test("x`x\\\"x\\'x\\`x\\\\", "x`[b]x\\\"x\\'x\\`x\\\\")
 }
 
+// The switch statement in ShTokenizer.ShAtom is exhaustive.
+// If a new quoting mode is added (in which case the shell tokenizer
+// should rather be rewritten completely and correctly), it is ok
+// to panic if ShQuoting is not adjusted in the same commit.
+func (s *Suite) Test_ShTokenizer_ShAtom__internal_error(c *check.C) {
+	t := s.Init(c)
+
+	line := t.NewLine("filename.mk", 123, "\ttoken")
+	tok := NewShTokenizer(line, line.Text)
+	t.ExpectPanicMatches(
+		func() { tok.ShAtom(^ShQuoting(0)) },
+		// Normalize the panic message, for Go < 12 if I remember correctly.
+		`^runtime error: index out of range.*`)
+}
+
 func (s *Suite) Test_ShTokenizer_shVarUse(c *check.C) {
 	t := s.Init(c)
 
 	test := func(input string, output *ShAtom, rest string) {
-		tok := NewShTokenizer(nil, input, false)
+		tok := NewShTokenizer(nil, input)
 		actual := tok.shVarUse(shqPlain)
 
 		t.CheckDeepEquals(actual, output)
@@ -601,7 +644,8 @@ func (s *Suite) Test_ShTokenizer_ShToken(c *check.C) {
 	// testRest ensures that the given string is parsed to the expected
 	// tokens, and returns the remaining text.
 	testRest := func(str string, expected ...string) string {
-		p := NewShTokenizer(dummyLine, str, false)
+		line := t.NewLine("testRest.mk", 1, "")
+		p := NewShTokenizer(line, str)
 		for _, exp := range expected {
 			t.CheckEquals(p.ShToken().MkText, exp)
 		}
@@ -609,7 +653,8 @@ func (s *Suite) Test_ShTokenizer_ShToken(c *check.C) {
 	}
 
 	test := func(str string, expected ...string) {
-		p := NewShTokenizer(dummyLine, str, false)
+		line := t.NewLine("test.mk", 1, "")
+		p := NewShTokenizer(line, str)
 		for _, exp := range expected {
 			t.CheckEquals(p.ShToken().MkText, exp)
 		}
@@ -618,7 +663,8 @@ func (s *Suite) Test_ShTokenizer_ShToken(c *check.C) {
 	}
 
 	testNil := func(str string) {
-		p := NewShTokenizer(dummyLine, str, false)
+		line := t.NewLine("testNil.mk", 1, "")
+		p := NewShTokenizer(line, str)
 		c.Check(p.ShToken(), check.IsNil)
 		t.CheckEquals(p.Rest(), "")
 		t.CheckOutputEmpty()

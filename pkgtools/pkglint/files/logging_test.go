@@ -172,11 +172,11 @@ func (s *Suite) Test_Logger_Diag__duplicates(c *check.C) {
 	logger := Logger{out: NewSeparatorWriter(&sw)}
 	line := t.NewLine("filename", 3, "Text")
 
-	logger.Diag(line, Error, "Blue should be %s.", "orange")
-	logger.Diag(line, Error, "Blue should be %s.", "orange")
+	logger.Diag(line, Error, "Blue must be %s.", "orange")
+	logger.Diag(line, Error, "Blue must be %s.", "orange")
 
 	t.CheckEquals(sw.String(), ""+
-		"ERROR: filename:3: Blue should be orange.\n")
+		"ERROR: filename:3: Blue must be orange.\n")
 }
 
 // Explanations are associated with their diagnostics. Therefore, when one
@@ -189,22 +189,22 @@ func (s *Suite) Test_Logger_Diag__explanation(c *check.C) {
 	logger.Opts.Explain = true
 	line := t.NewLine("filename", 3, "Text")
 
-	logger.Diag(line, Error, "Blue should be %s.", "orange")
+	logger.Diag(line, Error, "Blue must be %s.", "orange")
 	logger.Explain(
 		"The colors have changed.")
 
-	logger.Diag(line, Error, "Blue should be %s.", "orange")
+	logger.Diag(line, Error, "Blue must be %s.", "orange")
 	logger.Explain(
 		"The colors have changed.")
 
 	// Even when the text of the explanation is not the same, it is still
 	// suppressed since it belongs to the diagnostic.
-	logger.Diag(line, Error, "Blue should be %s.", "orange")
+	logger.Diag(line, Error, "Blue must be %s.", "orange")
 	logger.Explain(
 		"The colors have further changed.")
 
 	t.CheckEquals(sw.String(), ""+
-		"ERROR: filename:3: Blue should be orange.\n"+
+		"ERROR: filename:3: Blue must be orange.\n"+
 		"\n"+
 		"\tThe colors have changed.\n"+
 		"\n")
@@ -248,6 +248,10 @@ func (s *Suite) Test_Logger_Diag__show_source_with_whole_file(c *check.C) {
 func (s *Suite) Test_Logger_Diag__source_duplicates(c *check.C) {
 	t := s.Init(c)
 
+	// Up to pkglint 19.3.10, this variable had been reset during
+	// command line parsing. In 19.3.11 the command line option has
+	// been removed, therefore it must be reset manually.
+	G.Logger.verbose = false
 	t.SetUpPkgsrc()
 	t.CreateFileLines("category/dependency/patches/patch-aa",
 		CvsID,
@@ -567,10 +571,10 @@ func (s *Suite) Test_Logger_Logf(c *check.C) {
 	var sw strings.Builder
 	logger := Logger{out: NewSeparatorWriter(&sw)}
 
-	logger.Logf(Error, "filename", "3", "Blue should be %s.", "Blue should be orange.")
+	logger.Logf(Error, "filename", "3", "Blue must be %s.", "Blue must be orange.")
 
 	t.CheckEquals(sw.String(), ""+
-		"ERROR: filename:3: Blue should be orange.\n")
+		"ERROR: filename:3: Blue must be orange.\n")
 }
 
 // Logf doesn't filter duplicates, but Diag does.
@@ -580,12 +584,12 @@ func (s *Suite) Test_Logger_Logf__duplicates(c *check.C) {
 	var sw strings.Builder
 	logger := Logger{out: NewSeparatorWriter(&sw)}
 
-	logger.Logf(Error, "filename", "3", "Blue should be %s.", "Blue should be orange.")
-	logger.Logf(Error, "filename", "3", "Blue should be %s.", "Blue should be orange.")
+	logger.Logf(Error, "filename", "3", "Blue must be %s.", "Blue must be orange.")
+	logger.Logf(Error, "filename", "3", "Blue must be %s.", "Blue must be orange.")
 
 	t.CheckEquals(sw.String(), ""+
-		"ERROR: filename:3: Blue should be orange.\n"+
-		"ERROR: filename:3: Blue should be orange.\n")
+		"ERROR: filename:3: Blue must be orange.\n"+
+		"ERROR: filename:3: Blue must be orange.\n")
 }
 
 // Ensure that suppressing a diagnostic doesn't influence later calls to Logf.
@@ -682,7 +686,7 @@ func (s *Suite) Test_Logger_Logf__duplicate_messages(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpCommandLine("--explain")
-	G.Logger.Opts.LogVerbose = false
+	G.Logger.verbose = false
 	line := t.NewLine("README.txt", 123, "text")
 
 	// Is logged because it is the first appearance of this warning.
@@ -780,7 +784,7 @@ func (s *Suite) Test_Logger_Logf__duplicate_autofix(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpCommandLine("--explain", "--autofix")
-	G.Logger.Opts.LogVerbose = false // See SetUpTest
+	G.Logger.verbose = false // See SetUpTest
 	line := t.NewLine("README.txt", 123, "text")
 
 	fix := line.Autofix()
@@ -801,12 +805,29 @@ func (s *Suite) Test_Logger_Logf__panic(c *check.C) {
 		"Pkglint internal error: Diagnostic format \"No period\" must end in a period.")
 }
 
-func (s *Suite) Test_Logger_Errorf__gcc_format(c *check.C) {
+func (s *Suite) Test_Logger_Logf__wording(c *check.C) {
+	t := s.Init(c)
+
+	t.ExpectPanic(
+		func() { G.Logger.Logf(Error, "filename", "13", "This should.", "This should.") },
+		"Pkglint internal error: The word \"should\" must only appear in warnings: This should.")
+
+	t.ExpectPanic(
+		func() { G.Logger.Logf(Warn, "filename", "13", "This must.", "This must.") },
+		"Pkglint internal error: The word \"must\" must only appear in errors: This must.")
+
+	G.Logger.Logf(Note, "filename", "13", "This should.", "This should.")
+
+	t.CheckOutputLines(
+		"NOTE: filename:13: This should.")
+}
+
+func (s *Suite) Test_Logger_TechErrorf__gcc_format(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpCommandLine("--gcc-output-format")
 
-	G.Logger.Errorf("filename", "Cannot be opened for %s.", "reading")
+	G.Logger.TechErrorf("filename", "Cannot be opened for %s.", "reading")
 
 	t.CheckOutputLines(
 		"filename: error: Cannot be opened for reading.")

@@ -1,7 +1,7 @@
-# $NetBSD: Makefile,v 1.9 2019/11/15 10:01:35 ryoon Exp $
+# $NetBSD: Makefile,v 1.11 2019/11/25 10:07:43 wiz Exp $
 
 DISTNAME=		xorgproto-2019.2
-PKGREVISION=		2
+PKGREVISION=		3
 CATEGORIES=		x11 devel
 MASTER_SITES=		${MASTER_SITE_XORG:=proto/}
 EXTRACT_SUFX=		.tar.bz2
@@ -14,8 +14,8 @@ LICENSE=		mit
 GNU_CONFIGURE=		yes
 USE_LANGUAGES=		c
 
-# some packages need the old headers
-CONFIGURE_ARGS+=	--enable-legacy
+# Force a consistent PLIST.
+CONFIGURE_ENV+=		MISC_MAN_SUFFIX="7"
 
 PKGCONFIG_OVERRIDE+=	applewmproto.pc.in
 PKGCONFIG_OVERRIDE+=	bigreqsproto.pc.in

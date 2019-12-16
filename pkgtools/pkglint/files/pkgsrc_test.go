@@ -1,6 +1,10 @@
 package pkglint
 
-import "gopkg.in/check.v1"
+import (
+	"gopkg.in/check.v1"
+	"os"
+	"path/filepath"
+)
 
 func (s *Suite) Test_Pkgsrc__frozen(c *check.C) {
 	t := s.Init(c)
@@ -176,7 +180,7 @@ func (s *Suite) Test_Pkgsrc_loadDocChangesFromFile(c *check.C) {
 		Downgraded, "category/package", "1.2", "author7", "2018-01-07"})
 
 	t.CheckOutputLines(
-		"WARN: ~/doc/CHANGES-2018:1: Year \"2015\" for category/package does not match the filename ~/doc/CHANGES-2018.",
+		"WARN: ~/doc/CHANGES-2018:1: Year \"2015\" for category/package does not match the filename CHANGES-2018.",
 		"WARN: ~/doc/CHANGES-2018:6: Date \"2018-01-06\" for category/package is earlier than \"2018-01-09\" in line 5.",
 		"WARN: ~/doc/CHANGES-2018:8: Invalid doc/CHANGES line: \tReworked category/package to 1.2 [author8 2018-01-08]",
 		"WARN: ~/doc/CHANGES-2018:10: Invalid doc/CHANGES line: \ttoo few fields",
@@ -250,7 +254,7 @@ func (s *Suite) Test_Pkgsrc_loadDocChangesFromFile__default(c *check.C) {
 		"WARN: ~/doc/CHANGES-2018:6: Date \"2018-01-01\" for sysutils/checkperms is earlier than \"2018-01-05\" in line 5.",
 		"WARN: ~/doc/CHANGES-2018:7: Package changes should be indented using a single tab, not \"\\t\\t\".",
 		"WARN: ~/doc/CHANGES-2018:8: Invalid doc/CHANGES line: \tInvalid pkgpath to 1.16 [rillig 2019-06-16]",
-		"WARN: ~/doc/CHANGES-2018:9: Year \"2019\" for category/package does not match the filename ~/doc/CHANGES-2018.",
+		"WARN: ~/doc/CHANGES-2018:9: Year \"2019\" for category/package does not match the filename CHANGES-2018.",
 		"4 warnings found.",
 		t.Shquote("(Run \"pkglint -e -Cglobal -Wall %s\" to show explanations.)", "."))
 }
@@ -292,7 +296,7 @@ func (s *Suite) Test_Pkgsrc_loadDocChangesFromFile__infrastructure(c *check.C) {
 		"\t\tdistfile directly from GitHub [rillig 2018-01-01]",
 		"\tmk/bsd.pkg.mk: Another infrastructure change [rillig 2018-01-02]")
 
-	t.Main(t.File("category/package"))
+	t.Main("category/package")
 
 	// For pkglint's purpose, the infrastructure entries are simply ignored
 	// since they do not belong to a single package.
@@ -543,6 +547,7 @@ func (s *Suite) Test_Pkgsrc_parseSuggestedUpdates(c *check.C) {
 	t := s.Init(c)
 
 	lines := t.NewLines("doc/TODO",
+		CvsID,
 		"",
 		"Suggested package updates",
 		"==============",
@@ -556,8 +561,8 @@ func (s *Suite) Test_Pkgsrc_parseSuggestedUpdates(c *check.C) {
 	todo := G.Pkgsrc.parseSuggestedUpdates(lines)
 
 	t.CheckDeepEquals(todo, []SuggestedUpdate{
-		{lines.Lines[5].Location, "CSP", "0.34", ""},
-		{lines.Lines[6].Location, "freeciv-client", "2.5.0", "(urgent)"}})
+		{lines.Lines[6].Location, "CSP", "0.34", ""},
+		{lines.Lines[7].Location, "freeciv-client", "2.5.0", "(urgent)"}})
 }
 
 func (s *Suite) Test_Pkgsrc_parseSuggestedUpdates__wip(c *check.C) {
@@ -577,7 +582,36 @@ func (s *Suite) Test_Pkgsrc_parseSuggestedUpdates__wip(c *check.C) {
 
 	t.CheckOutputLines(
 		"WARN: ~/wip/package/Makefile:3: " +
-			"This package should be updated to 1.13 ([cool new features]).")
+			"This package should be updated to 1.13 (cool new features; see ../../wip/TODO:5).")
+}
+
+func (s *Suite) Test_Pkgsrc_parseSuggestedUpdates__parse_errors(c *check.C) {
+	t := s.Init(c)
+
+	lines := t.NewLines("doc/TODO",
+		"", // missing CvsID
+		"Suggested package updates",
+		"==============", // usually this line is a bit longer
+		"",
+		"", // usually there's only a single empty line
+		"\t"+"O wrong bullet",
+		"\t"+"o package-without-version",
+		"\t"+"o CSP-0.34",
+		"\t"+"o freeciv-client-2.5.0 (urgent)", // missing [brackets]
+		"\t"+"o mix-2.5.0 [urgent)",            // bracket + parenthesis
+		"",
+		"\t"+"o ignored-0.0")
+
+	todo := G.Pkgsrc.parseSuggestedUpdates(lines)
+
+	t.CheckDeepEquals(todo, []SuggestedUpdate{
+		{lines.Lines[7].Location, "CSP", "0.34", ""},
+		{lines.Lines[8].Location, "freeciv-client", "2.5.0", "(urgent)"},
+		{lines.Lines[9].Location, "mix", "2.5.0", "[urgent)"}})
+
+	t.CheckOutputLines(
+		"WARN: doc/TODO:6: Invalid line format \"\\tO wrong bullet\".",
+		"WARN: doc/TODO:7: Invalid package name \"package-without-version\".")
 }
 
 func (s *Suite) Test_Pkgsrc_loadTools(c *check.C) {
@@ -654,7 +688,9 @@ func (s *Suite) Test_Pkgsrc_loadTools__BUILD_DEFS(c *check.C) {
 		"\t@${ECHO} ${PKG_SYSCONFDIR} ${VARBASE}")
 	t.CreateFileLines("mk/bsd.pkg.mk",
 		MkCvsID,
-		"_BUILD_DEFS+=\tPKG_SYSCONFBASEDIR PKG_SYSCONFDIR")
+		"_BUILD_DEFS+=\tPKG_SYSCONFBASEDIR PKG_SYSCONFDIR",
+		"",
+		"BUILD_DEFINITIONS+=\tIGNORED\t")
 	t.CreateFileLines("mk/defaults/mk.conf",
 		MkCvsID,
 		"",
@@ -671,6 +707,48 @@ func (s *Suite) Test_Pkgsrc_loadTools__BUILD_DEFS(c *check.C) {
 	t.CheckOutputLines(
 		"WARN: ~/category/package/Makefile:21: " +
 			"The user-defined variable VARBASE is used but not added to BUILD_DEFS.")
+}
+
+func (s *Suite) Test_Pkgsrc_loadTools__conditional_in_mk_tools(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPkgsrc()
+	t.CreateFileLines("mk/tools/defaults.mk",
+		".if 0",
+		"USE_TOOLS+=\tcond-false",
+		".endif",
+		".if 1",
+		"USE_TOOLS+=\tcond-true",
+		".endif",
+		"USE_TOOLS+=\tunconditional")
+	t.FinishSetUp()
+
+	// The above FinishSetUp implicitly and indirectly calls loadTools.
+
+	t.CheckEquals(G.Pkgsrc.Tools.ByName("cond-false").Validity, Nowhere)
+	t.CheckEquals(G.Pkgsrc.Tools.ByName("cond-true").Validity, Nowhere)
+	t.CheckEquals(G.Pkgsrc.Tools.ByName("unconditional").Validity, AtRunTime)
+}
+
+func (s *Suite) Test_Pkgsrc_loadTools__conditional_in_bsd_pkg_mk(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPkgsrc()
+	t.CreateFileLines("mk/bsd.pkg.mk",
+		".if 0",
+		"USE_TOOLS+=\tcond-false",
+		".endif",
+		".if 1",
+		"USE_TOOLS+=\tcond-true",
+		".endif",
+		"USE_TOOLS+=\tunconditional")
+	t.FinishSetUp()
+
+	// The above FinishSetUp implicitly and indirectly calls loadTools.
+
+	t.CheckEquals(G.Pkgsrc.Tools.ByName("cond-false").Validity, Nowhere)
+	t.CheckEquals(G.Pkgsrc.Tools.ByName("cond-true").Validity, Nowhere)
+	t.CheckEquals(G.Pkgsrc.Tools.ByName("unconditional").Validity, AtRunTime)
 }
 
 func (s *Suite) Test_Pkgsrc_loadTools__no_tools_found(c *check.C) {
@@ -712,9 +790,7 @@ func (s *Suite) Test_Pkgsrc_initDeprecatedVars(c *check.C) {
 		"WARN: Makefile:2: Definition of USE_PERL5 is deprecated. "+
 			"Use USE_TOOLS+=perl or USE_TOOLS+=perl:run instead.",
 		"WARN: Makefile:3: Definition of SUBST_POSTCMD.class is deprecated. "+
-			"Has been removed, as it seemed unused.",
-		"WARN: Makefile:4: Use of \"PKG_JVM\" is deprecated. "+
-			"Use PKG_DEFAULT_JVM instead.")
+			"Has been removed, as it seemed unused.")
 }
 
 func (s *Suite) Test_Pkgsrc_loadUntypedVars(c *check.C) {
@@ -775,6 +851,41 @@ func (s *Suite) Test_Pkgsrc_loadUntypedVars__badly_named_directory(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
+func (s *Suite) Test_Pkgsrc_loadUntypedVars__loop_variable(c *check.C) {
+	t := s.Init(c)
+
+	t.CreateFileLines("mk/check/check-files.mk",
+		MkCvsID,
+		"${:U}=\t${CHECK_FILES_SKIP:@f@${f}@}",
+		"\t${/} ${} ${UNKNOWN}")
+
+	G.Pkgsrc.loadUntypedVars()
+
+	ignored := func(varname string) {
+		vartype := G.Pkgsrc.VariableType(nil, varname)
+		t.Check(vartype, check.IsNil, check.Commentf("%s", varname))
+	}
+	added := func(varname string, basicType *BasicType) {
+		vartype := G.Pkgsrc.VariableType(nil, "CHECK_FILES_SKIP")
+		if t.Check(vartype, check.NotNil) {
+			t.CheckEquals(vartype.basicType, BtPathPattern)
+		}
+	}
+
+	added("CHECK_FILES_SKIP", BtPathPattern)
+	added("UNKNOWN", BtUnknown)
+
+	ignored("")
+	ignored("f")
+	ignored(".f.")
+	ignored("/")
+	ignored("PREFIX")
+
+	t.CheckOutputLines(
+		"WARN: ~/mk/check/check-files.mk:3: " +
+			"Invalid part \"/\" after variable name \"\".")
+}
+
 func (s *Suite) Test_Pkgsrc_Latest__multiple_candidates(c *check.C) {
 	t := s.Init(c)
 
@@ -797,7 +908,7 @@ func (s *Suite) Test_Pkgsrc_Latest__not_found(c *check.C) {
 	t.CheckEquals(latest, "")
 
 	t.CheckOutputLines(
-		"ERROR: Cannot find package versions of \"^python[0-9]+$\" in \"~/lang\".")
+		"ERROR: ~/lang: Cannot find package versions of \"^python[0-9]+$\".")
 }
 
 // In 2017, PostgreSQL changed their versioning scheme to SemVer,
@@ -926,7 +1037,7 @@ func (s *Suite) Test_Pkgsrc_ListVersions__no_basedir(c *check.C) {
 
 	c.Check(versions, check.HasLen, 0)
 	t.CheckOutputLines(
-		"ERROR: Cannot find package versions of \"^python[0-9]+$\" in \"~/lang\".")
+		"ERROR: ~/lang: Cannot find package versions of \"^python[0-9]+$\".")
 }
 
 func (s *Suite) Test_Pkgsrc_ListVersions__no_subdirs(c *check.C) {
@@ -938,7 +1049,7 @@ func (s *Suite) Test_Pkgsrc_ListVersions__no_subdirs(c *check.C) {
 
 	c.Check(versions, check.HasLen, 0)
 	t.CheckOutputLines(
-		"ERROR: Cannot find package versions of \"^python[0-9]+$\" in \"~/lang\".")
+		"ERROR: ~/lang: Cannot find package versions of \"^python[0-9]+$\".")
 }
 
 // Ensures that failed lookups are also cached since they can be assumed
@@ -950,7 +1061,7 @@ func (s *Suite) Test_Pkgsrc_ListVersions__error_is_cached(c *check.C) {
 
 	c.Check(versions, check.HasLen, 0)
 	t.CheckOutputLines(
-		"ERROR: Cannot find package versions of \"^python[0-9]+$\" in \"~/lang\".")
+		"ERROR: ~/lang: Cannot find package versions of \"^python[0-9]+$\".")
 
 	versions2 := G.Pkgsrc.ListVersions("lang", `^python[0-9]+$`, "../../lang/$0", true)
 
@@ -1025,12 +1136,12 @@ func (s *Suite) Test_Pkgsrc_VariableType__from_mk(c *check.C) {
 		"PKGSRC_MAKE_ENV?=\t# none",
 		"CPPPATH?=\tcpp",
 		"OSNAME.Linux?=\tLinux")
-	pkg := t.SetUpPackage("category/package",
+	t.SetUpPackage("category/package",
 		"PKGSRC_MAKE_ENV+=\tCPP=${CPPPATH:Q}",
 		"PKGSRC_UNKNOWN_ENV+=\tCPP=${ABCPATH:Q}",
 		"OSNAME.SunOS=\t\t${OSNAME.Other}")
 
-	t.Main("-Wall", pkg)
+	t.Main("-Wall", "category/package")
 
 	if typ := G.Pkgsrc.VariableType(nil, "PKGSRC_MAKE_ENV"); c.Check(typ, check.NotNil) {
 		t.CheckEquals(typ.String(), "ShellWord (list, guessed)")
@@ -1075,7 +1186,7 @@ func (s *Suite) Test_Pkgsrc_guessVariableType__SKIP(c *check.C) {
 	// aclpUseLoadtime. Therefore there should be a warning about the VarUse in
 	// the .if line. As of March 2019, pkglint skips the permissions check for
 	// guessed variables since that variable might have an entirely different
-	// meaning; see MkLineChecker.checkVarusePermissions.
+	// meaning; see MkVarUseChecker.checkPermissions.
 	//
 	// There is no warning for the += operator in line 3 since the variable type
 	// (although guessed) is a list of things, and lists may be appended to.
@@ -1098,6 +1209,7 @@ func (s *Suite) Test_Pkgsrc_checkToplevelUnusedLicenses(c *check.C) {
 
 	t.CreateFileLines("category/Makefile",
 		MkCvsID,
+		"",
 		"COMMENT=\tExample category",
 		"",
 		"SUBDIR+=\tpackage",
@@ -1110,13 +1222,14 @@ func (s *Suite) Test_Pkgsrc_checkToplevelUnusedLicenses(c *check.C) {
 	t.SetUpPackage("category/package2",
 		"LICENSE=\tmissing")
 
-	t.Main("-r", "-Cglobal", t.File("."))
+	t.Main("-r", "-Cglobal", ".")
 
 	t.CheckOutputLines(
-		"WARN: ~/category/package2/Makefile:11: License file ~/licenses/missing does not exist.",
+		"ERROR: ~/category/package2/Makefile:11: License file ../../licenses/missing does not exist.",
 		"WARN: ~/licenses/gnu-gpl-v2: This license seems to be unused.", // Added by Tester.SetUpPkgsrc
 		"WARN: ~/licenses/gnu-gpl-v3: This license seems to be unused.",
-		"3 warnings found.")
+		"1 error and 2 warnings found.",
+		t.Shquote("(Run \"pkglint -e -r -Cglobal %s\" to show explanations.)", "."))
 }
 
 func (s *Suite) Test_Pkgsrc_ReadDir(c *check.C) {
@@ -1137,6 +1250,151 @@ func (s *Suite) Test_Pkgsrc_ReadDir(c *check.C) {
 	}
 
 	t.CheckDeepEquals(names, []string{"aaa-subdir", "file", "subdir"})
+}
+
+func (s *Suite) Test_Pkgsrc_Relpath(c *check.C) {
+	t := s.Init(c)
+
+	t.CheckEquals(G.Pkgsrc.topdir, t.tmpdir)
+	t.Chdir(".")
+	t.CheckEquals(G.Pkgsrc.topdir, NewCurrPath("."))
+
+	test := func(from, to CurrPath, result RelPath) {
+		t.CheckEquals(G.Pkgsrc.Relpath(from, to), result)
+	}
+
+	// TODO: add tests going from each of (top, cat, pkg, pkgsub) to the others
+
+	test("category", "other/package", "../other/package")
+	test("category/package", "other", "../../other")
+
+	test("some/dir", "some/directory", "../../some/directory")
+	test("some/directory", "some/dir", "../../some/dir")
+
+	test("category/package/.", ".", "../..")
+
+	// This case is handled by one of the shortcuts that avoid file system access.
+	test(
+		"./.",
+		"x11/frameworkintegration/../../meta-pkgs/kde/kf5.mk",
+		"meta-pkgs/kde/kf5.mk")
+
+	test(".hidden/dir", ".", "../..")
+	test("dir/.hidden", ".", "../..")
+
+	// This happens when "pkglint -r x11" is run.
+	G.Pkgsrc.topdir = "x11/.."
+
+	test(
+		"./.",
+		"x11/frameworkintegration/../../meta-pkgs/kde/kf5.mk",
+		"meta-pkgs/kde/kf5.mk")
+	test(
+		"x11/..",
+		"x11/frameworkintegration/../../meta-pkgs/kde/kf5.mk",
+		"meta-pkgs/kde/kf5.mk")
+
+	volume := NewCurrPathSlash(filepath.VolumeName(t.tmpdir.String()))
+	G.Pkgsrc.topdir = volume.JoinNoClean("usr/pkgsrc")
+
+	// Taken from Test_MkLineChecker_CheckRelativePath__wip_mk
+	test(
+		G.Pkgsrc.File("wip/package"),
+		G.Pkgsrc.File("wip/package/../mk/git-package.mk"),
+		"../../wip/mk/git-package.mk")
+
+	// Taken from Test_Package_parse__relative
+	test(
+		G.Pkgsrc.File("category/package"),
+		G.Pkgsrc.File("category/package/../package/extra.mk"),
+		"extra.mk")
+
+	// Make sure that .. in later positions is resolved correctly as well.
+	test(
+		G.Pkgsrc.File("category/package"),
+		G.Pkgsrc.File("category/package/sub/../../package/extra.mk"),
+		"extra.mk")
+
+	G.Pkgsrc.topdir = t.tmpdir
+
+	test("some/dir", "some/dir/../..", "../..")
+	test("some/dir", "some/dir/./././../..", "../..")
+	test("some/dir", "some/dir/", ".")
+
+	test("some/dir", ".", "../..")
+	test("some/dir/.", ".", "../..")
+
+	chdir := func(path CurrPath) {
+		// See Tester.Chdir; a direct Chdir works here since this test
+		// neither loads lines nor processes them.
+		assertNil(os.Chdir(path.String()), "Chdir %s", path)
+		G.cwd = G.Abs(path)
+	}
+
+	t.CreateFileLines("testdir/subdir/dummy")
+	chdir("testdir/subdir")
+
+	test(".", ".", ".")
+	test("./.", "./dir", "dir")
+
+	test("dir", ".", "..")
+	test("dir", "dir", ".")
+	test("dir", "dir/file", "file")
+	test("dir", "dir/..", "..")
+
+	test(".", "../../other/package", "../../other/package")
+
+	// Even though this path could be shortened to "../package",
+	// in pkgsrc the convention is to always go from a package
+	// directory up to the root and then back to the other package
+	// directory.
+	test(".", "../../testdir/package", "../../testdir/package")
+
+	chdir("..")
+
+	// When pkglint is run from a category directory to test
+	// the complete pkgsrc.
+	test("..", "../other/package", "other/package")
+
+	chdir(t.tmpdir.JoinNoClean(".."))
+
+	test(
+		"pkgsrc/category/package",
+		"pkgsrc/category/package/../../other/package",
+		"../../other/package")
+
+	test(
+		"pkgsrc/category/package",
+		"pkgsrc/category/package/../../category/other",
+		"../../category/other")
+
+	chdir(t.tmpdir.JoinNoClean("testdir").JoinNoClean("subdir"))
+
+	test("..", ".", "subdir")
+	test("../..", ".", "testdir/subdir")
+	test("../../", ".", "testdir/subdir")
+}
+
+func (s *Suite) Test_Pkgsrc_File(c *check.C) {
+	t := s.Init(c)
+
+	G.Pkgsrc.topdir = "$pkgsrcdir"
+
+	test := func(rel PkgsrcPath, resolved CurrPath) {
+		t.CheckEquals(G.Pkgsrc.File(rel), resolved)
+	}
+
+	test(".", "$pkgsrcdir")
+	test("category", "$pkgsrcdir/category")
+
+	test(
+		"category/package/../../mk/bsd.prefs.mk",
+		"$pkgsrcdir/mk/bsd.prefs.mk")
+
+	G.Pkgsrc.topdir = "."
+
+	test(".", ".")
+	test("filename", "filename")
 }
 
 func (s *Suite) Test_Change_Version(c *check.C) {
@@ -1162,8 +1420,8 @@ func (s *Suite) Test_Change_Target(c *check.C) {
 	moved := Change{loc, Moved, "category/path", "category/other", "author", "2019-01-01"}
 	downgraded := Change{loc, Downgraded, "category/path", "1.0", "author", "2019-01-01"}
 
-	t.CheckEquals(renamed.Target(), "category/other")
-	t.CheckEquals(moved.Target(), "category/other")
+	t.CheckEquals(renamed.Target(), NewPkgsrcPath("category/other"))
+	t.CheckEquals(moved.Target(), NewPkgsrcPath("category/other"))
 	t.ExpectAssert(func() { downgraded.Target() })
 }
 

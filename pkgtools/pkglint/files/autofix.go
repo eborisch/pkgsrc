@@ -1,15 +1,19 @@
 package pkglint
 
 import (
-	"io/ioutil"
 	"netbsd.org/pkglint/regex"
 	"os"
-	"path/filepath"
 	"strconv"
 	"strings"
 )
 
+type Autofixer interface {
+	Diagnoser
+	Autofix() *Autofix
+}
+
 // Autofix handles all modifications to a single line,
+// possibly spanning multiple physical lines in case of Makefile lines,
 // describes them in a human-readable form and formats the output.
 // The modifications are kept in memory only,
 // until they are written to disk by SaveAutofixChanges.
@@ -31,7 +35,6 @@ type autofixShortTerm struct {
 	diagFormat  string          // Is logged only if it couldn't be fixed automatically
 	diagArgs    []interface{}   //
 	explanation []string        // Is printed together with the diagnostic
-	anyway      bool            // Print the diagnostic even if it cannot be autofixed
 }
 
 type autofixAction struct {
@@ -299,15 +302,6 @@ func (fix *Autofix) Describef(lineno int, format string, args ...interface{}) {
 	fix.actions = append(fix.actions, autofixAction{sprintf(format, args...), lineno})
 }
 
-// Anyway has the effect of showing the diagnostic even when nothing can
-// be fixed automatically.
-//
-// As usual, the diagnostic is only shown if neither --show-autofix nor
-// --autofix mode is given.
-func (fix *Autofix) Anyway() {
-	fix.anyway = !G.Logger.IsAutofix()
-}
-
 // Apply does the actual work.
 // Depending on the pkglint mode, it either:
 //
@@ -332,7 +326,7 @@ func (fix *Autofix) Apply() {
 		fix.autofixShortTerm = autofixShortTerm{}
 	}
 
-	if !(G.Logger.Relevant(fix.diagFormat) && (len(fix.actions) > 0 || fix.anyway)) {
+	if !(G.Logger.Relevant(fix.diagFormat) && (len(fix.actions) > 0 || !G.Logger.IsAutofix())) {
 		reset()
 		return
 	}
@@ -454,13 +448,13 @@ func SaveAutofixChanges(lines *Lines) (autofixed bool) {
 	}
 
 	if G.Testing {
-		abs := abspath(lines.Filename)
-		absTmp := abspath(filepath.ToSlash(os.TempDir()))
-		assertf(hasPrefix(abs, absTmp), "%q must be inside %q", abs, absTmp)
+		abs := G.Abs(lines.Filename)
+		absTmp := G.Abs(NewCurrPathSlash(os.TempDir()))
+		assertf(abs.HasPrefixPath(absTmp), "%q must be inside %q", abs, absTmp)
 	}
 
-	changes := make(map[string][]string)
-	changed := make(map[string]bool)
+	changes := make(map[CurrPath][]string)
+	changed := make(map[CurrPath]bool)
 	for _, line := range lines.Lines {
 		chlines := changes[line.Filename]
 		if fix := line.autofix; fix != nil {
@@ -488,14 +482,14 @@ func SaveAutofixChanges(lines *Lines) (autofixed bool) {
 		for _, changedLine := range changedLines {
 			text.WriteString(changedLine)
 		}
-		err := ioutil.WriteFile(tmpName, []byte(text.String()), 0666)
+		err := tmpName.WriteString(text.String())
 		if err != nil {
-			G.Logger.Errorf(tmpName, "Cannot write: %s", err)
+			G.Logger.TechErrorf(tmpName, "Cannot write: %s", err)
 			continue
 		}
-		err = os.Rename(tmpName, filename)
+		err = tmpName.Rename(filename)
 		if err != nil {
-			G.Logger.Errorf(tmpName, "Cannot overwrite with autofixed content: %s", err)
+			G.Logger.TechErrorf(tmpName, "Cannot overwrite with autofixed content: %s", err)
 			continue
 		}
 		autofixed = true

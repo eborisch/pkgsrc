@@ -1,4 +1,4 @@
-# $NetBSD: Makefile,v 1.1416 2019/11/18 12:24:38 mef Exp $
+# $NetBSD: Makefile,v 1.1418 2019/11/30 22:10:52 markd Exp $
 #
 
 COMMENT=	Packages related to the World Wide Web
@@ -139,6 +139,7 @@ SUBDIR+=	goaccess
 SUBDIR+=	grafana
 SUBDIR+=	gtkasp2php
 SUBDIR+=	gtkhtml314
+SUBDIR+=	guile-haunt
 SUBDIR+=	gwt
 SUBDIR+=	h2o
 SUBDIR+=	haskell-cgi
@@ -163,7 +164,6 @@ SUBDIR+=	jetty7
 SUBDIR+=	jetty9
 SUBDIR+=	kahua
 SUBDIR+=	kannel
-SUBDIR+=	kdewebdev4
 SUBDIR+=	kdewebkit
 SUBDIR+=	khtml
 SUBDIR+=	kimagemapeditor

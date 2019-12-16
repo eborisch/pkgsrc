@@ -1,4 +1,4 @@
-# $NetBSD: Makefile,v 1.1071 2019/11/19 21:30:15 maya Exp $
+# $NetBSD: Makefile,v 1.1074 2019/12/12 16:21:38 taca Exp $
 #
 
 COMMENT=	Text processing utilities (does not include desktop publishing)
@@ -238,6 +238,7 @@ SUBDIR+=	gspell
 SUBDIR+=	gtk-doc
 SUBDIR+=	gtkspell
 SUBDIR+=	gtkspell3
+SUBDIR+=	guile-commonmark
 SUBDIR+=	guile-json
 SUBDIR+=	guile-syntax-highlight
 SUBDIR+=	gutcheck
@@ -935,7 +936,6 @@ SUBDIR+=	ruby-amrita
 SUBDIR+=	ruby-bluecloth
 SUBDIR+=	ruby-buftok
 SUBDIR+=	ruby-builder
-SUBDIR+=	ruby-builder30
 SUBDIR+=	ruby-cabocha
 SUBDIR+=	ruby-classifier-reborn
 SUBDIR+=	ruby-coderay
@@ -1072,6 +1072,7 @@ SUBDIR+=	verify-synopsis
 SUBDIR+=	vis
 SUBDIR+=	wbxml2
 SUBDIR+=	wdiff
+SUBDIR+=	word2vec
 SUBDIR+=	writer2latex
 SUBDIR+=	xalan-j
 SUBDIR+=	xapian

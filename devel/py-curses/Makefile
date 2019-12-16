@@ -1,4 +1,4 @@
-# $NetBSD: Makefile,v 1.48 2019/11/03 10:18:26 rillig Exp $
+# $NetBSD: Makefile,v 1.50 2019/12/15 14:42:27 adam Exp $
 
 PKGNAME=	${PYPKGPREFIX}-curses-${PY_DISTVERSION}
 PKGREVISION=	5

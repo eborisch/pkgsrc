@@ -1,4 +1,4 @@
-# $NetBSD: Makefile,v 1.15 2019/11/10 17:49:21 maya Exp $
+# $NetBSD: Makefile,v 1.17 2019/12/13 00:47:23 gutteridge Exp $
 
 DISTNAME=	guile-2.2.6
 PKGNAME=	${DISTNAME:S/guile/guile22/}
@@ -21,6 +21,8 @@ CONFIGURE_ARGS+=	--disable-shared
 # not until boehm-gc is threaded
 CONFIGURE_ARGS+=	--without-threads
 CONFIGURE_ARGS+=	SHELL=${CONFIG_SHELL}
+# Needed to work around broken configure check for accept4()
+LDFLAGS.SunOS+=		-lsocket -lnsl
 
 .if !empty(GUILE_SUBDIR)
 # Installation prefix is non-default.
@@ -40,6 +42,7 @@ INFO_FILES=		yes
 USE_LIBTOOL=		yes
 USE_TOOLS+=		gmake pkg-config
 USE_TOOLS.Darwin+=	gsed
+USE_TOOLS.SunOS+=	gsed
 
 PKGCONFIG_OVERRIDE+=	meta/guile-2.2.pc.in
 # known broken: test-loose-ends on NetBSD/current

@@ -48,6 +48,20 @@ func (s *Suite) Test_Load(c *check.C) {
 		"FATAL: ~/empty: Must not be empty.")
 }
 
+// Up to 2019-12-04, pkglint suppressed fatal errors when it was started
+// with the --autofix option. This was another case where the clear
+// separation between diagnostics and technical errors had been confused.
+func (s *Suite) Test_Load__not_found_in_autofix_mode(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpCommandLine("--autofix")
+	t.Chdir(".")
+
+	t.ExpectFatal(
+		func() { Load("nonexistent", MustSucceed) },
+		"FATAL: nonexistent: Cannot be read.")
+}
+
 func (s *Suite) Test_convertToLogicalLines__no_continuation(c *check.C) {
 	t := s.Init(c)
 
@@ -75,6 +89,28 @@ func (s *Suite) Test_convertToLogicalLines__continuation(c *check.C) {
 	t.CheckEquals(lines.Len(), 2)
 	t.CheckEquals(lines.Lines[0].String(), "filename:1--2: first line, still first line")
 	t.CheckEquals(lines.Lines[1].String(), "filename:3: second line")
+}
+
+// This test demonstrates that pkglint deviates from bmake.
+// Bmake keeps all the trailing whitespace from the line and replaces the
+// backslash plus any indentation with a single space. This results in:
+//  "\tprintf '%s\\n' 'none none  space  space  tab\t tab'"
+// This is another of the edge cases probably no-one relies on.
+func (s *Suite) Test_convertToLogicalLines__continuation_spacing(c *check.C) {
+	t := s.Init(c)
+
+	rawText := "" +
+		"\tprintf '%s\\n' 'none\\\n" +
+		"none\\\n" +
+		"space \\\n" +
+		" space \\\n" +
+		"tab\t\\\n" +
+		"\ttab'\n"
+
+	lines := convertToLogicalLines("filename", rawText, true)
+
+	t.CheckEquals(lines.Lines[0].Text,
+		"\tprintf '%s\\n' 'none none space space tab tab'")
 }
 
 func (s *Suite) Test_convertToLogicalLines__continuation_in_last_line(c *check.C) {

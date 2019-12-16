@@ -5,9 +5,19 @@ import (
 	"io"
 	"netbsd.org/pkglint/histogram"
 	"netbsd.org/pkglint/textproc"
-	"path"
 	"strings"
 )
+
+// Diagnoser provides the standard way of producing errors, warnings
+// and notes, and explanations for them.
+//
+// For convenience, it is implemented by several types in pkglint.
+type Diagnoser interface {
+	Errorf(format string, args ...interface{})
+	Warnf(format string, args ...interface{})
+	Notef(format string, args ...interface{})
+	Explain(explanation ...string)
+}
 
 type Logger struct {
 	Opts LoggerOpts
@@ -19,6 +29,7 @@ type Logger struct {
 	suppressExpl bool
 	prevLine     *Line
 
+	verbose   bool // allow duplicate diagnostics, even in the same line
 	logged    Once
 	explained Once
 	histo     *histogram.Histogram
@@ -35,7 +46,6 @@ type LoggerOpts struct {
 	Autofix,
 	Explain,
 	ShowSource,
-	LogVerbose,
 	GccOutput,
 	Quiet bool
 }
@@ -53,14 +63,11 @@ var (
 	AutofixLogLevel = &LogLevel{"AUTOFIX", "autofix"}
 )
 
-var dummyLine = NewLineMulti("", 0, 0, "", nil)
-
 // Explain outputs an explanation for the preceding diagnostic
 // if the --explain option is given. Otherwise it just records
 // that an explanation is available.
 func (l *Logger) Explain(explanation ...string) {
 	if l.suppressExpl {
-		l.suppressExpl = false
 		return
 	}
 
@@ -97,7 +104,19 @@ func (l *Logger) Explain(explanation ...string) {
 //
 // See Logf for logging arbitrary messages.
 func (l *Logger) Diag(line *Line, level *LogLevel, format string, args ...interface{}) {
-	if l.IsAutofix() {
+	if G.Testing {
+		for _, arg := range args {
+			switch arg.(type) {
+			case int, string, error:
+			default:
+				// All paths in diagnostics must be relative to the line.
+				// To achieve that, call line.File(currPath).
+				_ = arg.(RelPath)
+			}
+		}
+	}
+
+	if l.IsAutofix() && level != Fatal {
 		// In these two cases, the only interesting diagnostics are those that can
 		// be fixed automatically. These are logged by Autofix.Apply.
 		l.suppressExpl = true
@@ -126,12 +145,12 @@ func (l *Logger) Diag(line *Line, level *LogLevel, format string, args ...interf
 	l.Logf(level, filename, linenos, format, msg)
 }
 
-func (l *Logger) FirstTime(filename, linenos, msg string) bool {
-	if l.Opts.LogVerbose {
+func (l *Logger) FirstTime(filename CurrPath, linenos, msg string) bool {
+	if l.verbose {
 		return true
 	}
 
-	if !l.logged.FirstTimeSlice(path.Clean(filename), linenos, msg) {
+	if !l.logged.FirstTimeSlice(filename.Clean().String(), linenos, msg) {
 		l.suppressDiag = true
 		l.suppressExpl = true
 		return false
@@ -230,10 +249,23 @@ func (l *Logger) showSource(line *Line) {
 // IsAutofix returns whether one of the --show-autofix or --autofix options is active.
 func (l *Logger) IsAutofix() bool { return l.Opts.Autofix || l.Opts.ShowAutofix }
 
-func (l *Logger) Logf(level *LogLevel, filename, lineno, format, msg string) {
+func (l *Logger) Logf(level *LogLevel, filename CurrPath, lineno, format, msg string) {
 	if l.suppressDiag {
 		l.suppressDiag = false
 		return
+	}
+
+	if G.Testing {
+		if level != Error {
+			assertf(
+				!contains(format, "must"),
+				"The word \"must\" must only appear in errors: %s", format)
+		}
+		if level != Warn && level != Note {
+			assertf(
+				!contains(format, "should"),
+				"The word \"should\" must only appear in warnings: %s", format)
+		}
 	}
 
 	if G.Testing && format != AutofixFormat {
@@ -249,8 +281,8 @@ func (l *Logger) Logf(level *LogLevel, filename, lineno, format, msg string) {
 		}
 	}
 
-	if filename != "" {
-		filename = cleanpath(filename)
+	if !filename.IsEmpty() {
+		filename = filename.CleanPath()
 	}
 	if G.Opts.Profiling && format != AutofixFormat && level != Fatal {
 		l.histo.Add(format, 1)
@@ -261,8 +293,8 @@ func (l *Logger) Logf(level *LogLevel, filename, lineno, format, msg string) {
 		out = l.err
 	}
 
-	filenameSep := condStr(filename != "", ": ", "")
-	effLineno := condStr(filename != "", lineno, "")
+	filenameSep := condStr(!filename.IsEmpty(), ": ", "")
+	effLineno := condStr(!filename.IsEmpty(), lineno, "")
 	linenoSep := condStr(effLineno != "", ":", "")
 	var diag string
 	if l.Opts.GccOutput {
@@ -284,19 +316,22 @@ func (l *Logger) Logf(level *LogLevel, filename, lineno, format, msg string) {
 	}
 }
 
-// Errorf logs a technical error on the error output.
-//
-// location must be a slash-separated filename, such as the one in
-// Location.Filename. It may be followed by the usual ":123" for line numbers.
+// TechErrorf logs a technical error on the error output.
 //
 // For diagnostics, use Logf instead.
-func (l *Logger) Errorf(location string, format string, args ...interface{}) {
+func (l *Logger) TechErrorf(location CurrPath, format string, args ...interface{}) {
 	msg := sprintf(format, args...)
+
+	locationStr := ""
+	if !location.IsEmpty() {
+		locationStr = location.String() + ": "
+	}
+
 	var diag string
 	if l.Opts.GccOutput {
-		diag = sprintf("%s: %s: %s\n", location, Error.GccName, msg)
+		diag = sprintf("%s%s: %s\n", locationStr, Error.GccName, msg)
 	} else {
-		diag = sprintf("%s: %s: %s\n", Error.TraditionalName, location, msg)
+		diag = sprintf("%s: %s%s\n", Error.TraditionalName, locationStr, msg)
 	}
 	l.err.Write(escapePrintable(diag))
 }
@@ -360,6 +395,7 @@ type SeparatorWriter struct {
 }
 
 func NewSeparatorWriter(out io.Writer) *SeparatorWriter {
+	assertNotNil(out)
 	return &SeparatorWriter{out, 3, bytes.Buffer{}}
 }
 

@@ -1,4 +1,4 @@
-# $NetBSD: Makefile,v 1.860 2019/11/17 03:52:37 markd Exp $
+# $NetBSD: Makefile,v 1.869 2019/12/11 21:15:10 nia Exp $
 #
 
 COMMENT=	Graphics tools and libraries
@@ -119,7 +119,6 @@ SUBDIR+=	exifprobe
 SUBDIR+=	exiftags
 SUBDIR+=	exiv2
 SUBDIR+=	extrema
-SUBDIR+=	f-spot
 SUBDIR+=	faba-icon-theme
 SUBDIR+=	fbm
 SUBDIR+=	feh
@@ -180,7 +179,6 @@ SUBDIR+=	gimp-refocus-it
 SUBDIR+=	gimp-resynthesizer
 SUBDIR+=	gimp-ufraw
 SUBDIR+=	gimp-warp-sharp
-SUBDIR+=	gimp-webp
 SUBDIR+=	gimp2-wideangle
 SUBDIR+=	giram
 SUBDIR+=	girara
@@ -282,11 +280,10 @@ SUBDIR+=	kipi-plugins
 SUBDIR+=	kolourpaint
 SUBDIR+=	koverartist
 SUBDIR+=	kplotting
+SUBDIR+=	kqtquickcharts
 SUBDIR+=	kqtquickcharts4
 SUBDIR+=	krita
 SUBDIR+=	kruler
-SUBDIR+=	ksaneplugin
-SUBDIR+=	ksnapshot
 SUBDIR+=	lasem
 SUBDIR+=	lcms
 SUBDIR+=	lcms2
@@ -320,7 +317,6 @@ SUBDIR+=	libjpeg-turbo
 SUBDIR+=	libkdcraw
 SUBDIR+=	libkexiv2
 SUBDIR+=	libkexiv2-kde4
-SUBDIR+=	libkface
 SUBDIR+=	libkipi
 SUBDIR+=	libksane
 SUBDIR+=	liblqr
@@ -473,6 +469,7 @@ SUBDIR+=	py-imagesize
 SUBDIR+=	py-imaging
 SUBDIR+=	py-leather
 SUBDIR+=	py-matplotlib
+SUBDIR+=	py-matplotlib-venn
 SUBDIR+=	py-mcomix
 SUBDIR+=	py-nwdiag
 SUBDIR+=	py-objgraph
@@ -779,6 +776,7 @@ SUBDIR+=	vp
 SUBDIR+=	vtk
 SUBDIR+=	vtk-data
 SUBDIR+=	vtk-docs
+SUBDIR+=	wld
 SUBDIR+=	wm-icons
 SUBDIR+=	wmphoto
 SUBDIR+=	wxsvg
@@ -801,6 +799,7 @@ SUBDIR+=	xv
 SUBDIR+=	xzgv
 SUBDIR+=	zathura-cb
 SUBDIR+=	zathura-djvu
+SUBDIR+=	zbar
 SUBDIR+=	zphoto
 
 .include "../mk/misc/category.mk"
